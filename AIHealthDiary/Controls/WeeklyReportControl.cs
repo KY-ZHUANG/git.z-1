@@ -55,8 +55,9 @@ namespace AIHealthDiary.Controls
             var mainPanel = new Panel
             {
                 Dock = DockStyle.Fill,
-                Padding = new Padding(20),
-                BackColor = Color.White
+                Padding = new Padding(10),
+                BackColor = Color.White,
+                AutoScroll = true
             };
 
             // 标题栏
@@ -77,11 +78,19 @@ namespace AIHealthDiary.Controls
             };
             headerPanel.Controls.Add(titleLabel);
 
+            // 按钮面板（靠右对齐）
+            var buttonPanel = new Panel
+            {
+                Dock = DockStyle.Right,
+                Width = 280,
+                BackColor = Color.FromArgb(0, 150, 136)
+            };
+
             // 刷新按钮
             var btnRefresh = new Button
             {
                 Text = "刷新报告",
-                Location = new Point(700, 12),
+                Location = new Point(10, 12),
                 Size = new Size(120, 35),
                 FlatStyle = FlatStyle.Flat,
                 BackColor = Color.FromArgb(0, 120, 109),
@@ -90,13 +99,13 @@ namespace AIHealthDiary.Controls
             };
             btnRefresh.FlatAppearance.BorderSize = 0;
             btnRefresh.Click += (s, e) => GenerateReport();
-            headerPanel.Controls.Add(btnRefresh);
+            buttonPanel.Controls.Add(btnRefresh);
 
             // 导出按钮
             var btnExport = new Button
             {
                 Text = "导出报告",
-                Location = new Point(830, 12),
+                Location = new Point(140, 12),
                 Size = new Size(120, 35),
                 FlatStyle = FlatStyle.Flat,
                 BackColor = Color.FromArgb(0, 120, 109),
@@ -105,7 +114,9 @@ namespace AIHealthDiary.Controls
             };
             btnExport.FlatAppearance.BorderSize = 0;
             btnExport.Click += BtnExport_Click;
-            headerPanel.Controls.Add(btnExport);
+            buttonPanel.Controls.Add(btnExport);
+
+            headerPanel.Controls.Add(buttonPanel);
 
             mainPanel.Controls.Add(headerPanel);
 

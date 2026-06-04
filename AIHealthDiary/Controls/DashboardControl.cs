@@ -46,6 +46,8 @@ namespace AIHealthDiary.Controls
                 Dock = DockStyle.Fill,
                 ColumnCount = 2,
                 RowCount = 2,
+                Padding = new Padding(10),
+                AutoScroll = true,
                 ColumnStyles = 
                 {
                     new ColumnStyle(SizeType.Percent, 50F),
@@ -53,8 +55,8 @@ namespace AIHealthDiary.Controls
                 },
                 RowStyles = 
                 {
-                    new RowStyle(SizeType.Percent, 50F),
-                    new RowStyle(SizeType.Percent, 50F)
+                    new RowStyle(SizeType.Absolute, 280F),
+                    new RowStyle(SizeType.Absolute, 280F)
                 }
             };
 
@@ -296,8 +298,9 @@ namespace AIHealthDiary.Controls
             {
                 Dock = DockStyle.Fill,
                 BackColor = Color.White,
-                Margin = new Padding(10),
-                Padding = new Padding(15)
+                Margin = new Padding(8),
+                Padding = new Padding(12),
+                MinimumSize = new Size(280, 250)
             };
             card.Paint += (s, e) =>
             {
