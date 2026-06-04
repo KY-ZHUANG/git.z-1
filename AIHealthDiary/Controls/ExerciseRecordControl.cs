@@ -55,7 +55,9 @@ namespace AIHealthDiary.Controls
             {
                 Dock = DockStyle.Fill,
                 Orientation = Orientation.Vertical,
-                SplitterDistance = 400
+                SplitterDistance = 420,
+                Panel1MinSize = 400,
+                Panel2MinSize = 500
             };
 
             // 左侧：添加记录表单
@@ -95,10 +97,17 @@ namespace AIHealthDiary.Controls
                 Dock = DockStyle.Fill,
                 ColumnCount = 2,
                 RowCount = 8,
-                Padding = new Padding(0, 20, 0, 0)
+                Padding = new Padding(10, 20, 10, 10),
+                AutoScroll = true
             };
-            formPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100F));
+            formPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90F));
             formPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            
+            // 设置行高
+            for (int i = 0; i < 8; i++)
+            {
+                formPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 42F));
+            }
 
             int row = 0;
 
