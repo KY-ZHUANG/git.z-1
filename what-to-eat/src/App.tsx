@@ -4,6 +4,7 @@ import RecipePage from './pages/RecipePage';
 import RecipeDetail from './components/recipe/RecipeDetail';
 import RecommendationPage from './pages/RecommendationPage';
 import HealthPage from './pages/HealthPage';
+import AddRecipeForm from './components/recipe/AddRecipeForm';
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
         <Routes>
           <Route path="/" element={<RecipePage />} />
           <Route path="/recipe/:id" element={<RecipeDetail />} />
+          <Route path="/recipe/add" element={<AddRecipeForm />} />
           <Route path="/recommend" element={<RecommendationPage />} />
           <Route path="/health" element={<HealthPage />} />
         </Routes>
