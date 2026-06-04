@@ -189,11 +189,12 @@ namespace AIHealthDiary
 
             // 创建导航按钮
             CreateNavButton("🏠 首页", 0, ShowDashboard);
-            CreateNavButton("💓 健康记录", 1, ShowHealthRecords);
-            CreateNavButton("🍽️ 饮食记录", 2, ShowDietRecords);
-            CreateNavButton("🏃 运动记录", 3, ShowExerciseRecords);
-            CreateNavButton("🤖 AI 分析", 4, ShowAIAnalysis);
-            CreateNavButton("📊 周报", 5, ShowWeeklyReport);
+            CreateNavButton("👤 用户管理", 1, ShowUserManagement);
+            CreateNavButton("💓 健康记录", 2, ShowHealthRecords);
+            CreateNavButton("🍽️ 饮食记录", 3, ShowDietRecords);
+            CreateNavButton("🏃 运动记录", 4, ShowExerciseRecords);
+            CreateNavButton("🤖 AI 分析", 5, ShowAIAnalysis);
+            CreateNavButton("📊 周报", 6, ShowWeeklyReport);
 
             _navContainer.Controls.Add(_navPanel);
             this.Controls.Add(_navContainer);
@@ -411,19 +412,19 @@ namespace AIHealthDiary
             {
                 case "health":
                     ShowHealthRecords();
-                    HighlightNavButton(1);
+                    HighlightNavButton(2);
                     break;
                 case "diet":
                     ShowDietRecords();
-                    HighlightNavButton(2);
+                    HighlightNavButton(3);
                     break;
                 case "exercise":
                     ShowExerciseRecords();
-                    HighlightNavButton(3);
+                    HighlightNavButton(4);
                     break;
                 case "ai":
                     ShowAIAnalysis();
-                    HighlightNavButton(4);
+                    HighlightNavButton(5);
                     break;
             }
         }
@@ -452,6 +453,22 @@ namespace AIHealthDiary
                     break;
                 }
             }
+        }
+
+        /// <summary>
+        /// 显示用户管理界面
+        /// </summary>
+        private void ShowUserManagement(object? sender = null, EventArgs? e = null)
+        {
+            _contentPanel.Controls.Clear();
+            var userControl = new UserManagementControl(_dbManager, _currentUser);
+            userControl.Dock = DockStyle.Fill;
+            userControl.OnUserUpdated += (user) =>
+            {
+                _currentUser = user;
+                LoadUsers();
+            };
+            _contentPanel.Controls.Add(userControl);
         }
 
         /// <summary>
