@@ -99,8 +99,19 @@ namespace AIHealthDiary.Controls
                 Dock = DockStyle.Fill,
                 ColumnCount = 2,
                 RowCount = 5,
-                Padding = new Padding(10)
+                Padding = new Padding(15),
+                AutoScroll = true
             };
+
+            // 设置列宽比例
+            contentPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80F));
+            contentPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+
+            // 设置行高
+            for (int i = 0; i < 5; i++)
+            {
+                contentPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
+            }
 
             AddInfoRow(contentPanel, "姓名：", _currentUser.Name, 0);
             AddInfoRow(contentPanel, "性别：", _currentUser.Gender, 1);
@@ -187,10 +198,24 @@ namespace AIHealthDiary.Controls
             var contentPanel = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                ColumnCount = 2,
+                ColumnCount = 4,
                 RowCount = 3,
-                Padding = new Padding(10)
+                Padding = new Padding(15),
+                AutoScroll = true
             };
+
+            // 设置列宽
+            for (int i = 0; i < 4; i += 2)
+            {
+                contentPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90F));
+                contentPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            }
+
+            // 设置行高
+            for (int i = 0; i < 3; i++)
+            {
+                contentPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 33.33F));
+            }
 
             if (_currentUser != null)
             {
@@ -306,7 +331,9 @@ namespace AIHealthDiary.Controls
                 Font = new Font("Microsoft YaHei", 10F),
                 ForeColor = Color.Gray,
                 Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleLeft
+                TextAlign = ContentAlignment.MiddleLeft,
+                AutoSize = true,
+                Margin = new Padding(3)
             };
 
             var lblValue = new Label
@@ -315,7 +342,9 @@ namespace AIHealthDiary.Controls
                 Font = new Font("Microsoft YaHei", 10F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(33, 33, 33),
                 Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleLeft
+                TextAlign = ContentAlignment.MiddleLeft,
+                AutoSize = true,
+                Margin = new Padding(3)
             };
 
             panel.Controls.Add(lblLabel, column * 2, row);

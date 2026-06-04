@@ -60,7 +60,8 @@ namespace AIHealthDiary
         private void InitializeComponent()
         {
             this.Text = "AI 健康日记与数据管理系统";
-            this.Size = new Size(1200, 800);
+            this.Size = new Size(1400, 900);
+            this.MinimumSize = new Size(1200, 800);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.BackColor = Color.FromArgb(245, 247, 250);
             this.Font = new Font("Microsoft YaHei", 10F, FontStyle.Regular, GraphicsUnit.Point);
