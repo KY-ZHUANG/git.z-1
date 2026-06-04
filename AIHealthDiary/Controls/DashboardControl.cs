@@ -146,32 +146,53 @@ namespace AIHealthDiary.Controls
                 return card;
             }
 
-            var contentPanel = new Panel { Dock = DockStyle.Fill };
+            var contentPanel = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 4,
+                Padding = new Padding(10)
+            };
+            contentPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
+            contentPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 30F));
+            contentPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
+            contentPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
 
             double bmi = _currentUser.CalculateBMI();
             string category = _currentUser.GetBMICategory();
+
+            // BMI分类标题（放在最上方，避免被遮挡）
+            var lblCategoryTitle = new Label
+            {
+                Text = "BMI 分类",
+                Font = new Font("Microsoft YaHei", 12F),
+                ForeColor = Color.Gray,
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.BottomCenter
+            };
+            contentPanel.Controls.Add(lblCategoryTitle, 0, 0);
 
             // BMI数值显示
             var lblBMI = new Label
             {
                 Text = bmi.ToString("F1"),
-                Font = new Font("Microsoft YaHei", 48F, FontStyle.Bold),
+                Font = new Font("Microsoft YaHei", 42F, FontStyle.Bold),
                 ForeColor = GetBMIColor(bmi),
-                AutoSize = true,
-                Location = new Point(80, 40)
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleCenter
             };
-            contentPanel.Controls.Add(lblBMI);
+            contentPanel.Controls.Add(lblBMI, 0, 1);
 
             // BMI分类
             var lblCategory = new Label
             {
                 Text = category,
-                Font = new Font("Microsoft YaHei", 14F),
+                Font = new Font("Microsoft YaHei", 14F, FontStyle.Bold),
                 ForeColor = GetBMIColor(bmi),
-                AutoSize = true,
-                Location = new Point(100, 110)
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.TopCenter
             };
-            contentPanel.Controls.Add(lblCategory);
+            contentPanel.Controls.Add(lblCategory, 0, 2);
 
             // 理想体重范围
             double idealMin = 18.5 * Math.Pow(_currentUser.Height / 100, 2);
@@ -181,10 +202,10 @@ namespace AIHealthDiary.Controls
                 Text = $"理想体重: {idealMin:F1} - {idealMax:F1} kg",
                 Font = new Font("Microsoft YaHei", 10F),
                 ForeColor = Color.Gray,
-                AutoSize = true,
-                Location = new Point(60, 150)
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.TopCenter
             };
-            contentPanel.Controls.Add(lblIdeal);
+            contentPanel.Controls.Add(lblIdeal, 0, 3);
 
             card.Controls.Add(contentPanel);
             return card;

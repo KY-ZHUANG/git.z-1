@@ -198,12 +198,13 @@ namespace AIHealthDiary
             _navContainer.Controls.Add(_navPanel);
             this.Controls.Add(_navContainer);
 
-            // 创建主内容面板容器（用于预留顶部空间）
+            // 创建主内容面板容器（用于预留顶部和左侧空间）
             var contentContainer = new Panel
             {
                 Dock = DockStyle.Fill,
                 BackColor = Color.FromArgb(245, 247, 250),
-                Padding = new Padding(0, 70, 0, 0)  // 顶部预留70像素空间，避免被标题栏遮挡
+                // 顶部预留70像素避免被标题栏遮挡，左侧预留60像素避免被收起状态的侧边栏遮挡
+                Padding = new Padding(60, 70, 0, 0)
             };
 
             // 创建实际的内容面板
@@ -389,7 +390,68 @@ namespace AIHealthDiary
             _contentPanel.Controls.Clear();
             var dashboard = new DashboardControl(_dbManager, _currentUser);
             dashboard.Dock = DockStyle.Fill;
+            // 订阅快捷操作事件
+            dashboard.OnQuickAction += HandleQuickAction;
             _contentPanel.Controls.Add(dashboard);
+        }
+
+        /// <summary>
+        /// 处理首页快捷操作
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        private void HandleQuickAction(string action)
+        {
+            if (_currentUser == null)
+            {
+                MessageBox.Show("请先选择或添加用户", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            switch (action)
+            {
+                case "health":
+                    ShowHealthRecords();
+                    HighlightNavButton(1);
+                    break;
+                case "diet":
+                    ShowDietRecords();
+                    HighlightNavButton(2);
+                    break;
+                case "exercise":
+                    ShowExerciseRecords();
+                    HighlightNavButton(3);
+                    break;
+                case "ai":
+                    ShowAIAnalysis();
+                    HighlightNavButton(4);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 高亮指定索引的导航按钮
+        /// </summary>
+        /// <param name="index">按钮索引</param>
+        private void HighlightNavButton(int index)
+        {
+            // 重置所有按钮颜色
+            foreach (Control ctrl in _navPanel.Controls)
+            {
+                if (ctrl is Button btn)
+                {
+                    btn.BackColor = Color.FromArgb(38, 50, 56);
+                }
+            }
+
+            // 高亮指定按钮
+            foreach (Control ctrl in _navPanel.Controls)
+            {
+                if (ctrl is Button btn && btn.Tag is int btnIndex && btnIndex == index)
+                {
+                    btn.BackColor = Color.FromArgb(0, 150, 136);
+                    break;
+                }
+            }
         }
 
         /// <summary>
