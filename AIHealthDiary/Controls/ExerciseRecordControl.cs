@@ -55,9 +55,8 @@ namespace AIHealthDiary.Controls
             {
                 Dock = DockStyle.Fill,
                 Orientation = Orientation.Vertical,
-                SplitterDistance = 350,
-                Panel1MinSize = 300,
-                Panel2MinSize = 400
+                SplitterDistance = 380,
+                Panel1MinSize = 300
             };
 
             // 左侧：添加记录表单
