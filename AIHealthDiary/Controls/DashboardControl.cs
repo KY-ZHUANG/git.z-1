@@ -55,8 +55,8 @@ namespace AIHealthDiary.Controls
                 },
                 RowStyles = 
                 {
-                    new RowStyle(SizeType.Absolute, 280F),
-                    new RowStyle(SizeType.Absolute, 280F)
+                    new RowStyle(SizeType.Percent, 50F),
+                    new RowStyle(SizeType.Percent, 50F)
                 }
             };
 
@@ -300,7 +300,7 @@ namespace AIHealthDiary.Controls
                 BackColor = Color.White,
                 Margin = new Padding(8),
                 Padding = new Padding(12),
-                MinimumSize = new Size(280, 250)
+                MinimumSize = new Size(280, 200)
             };
             card.Paint += (s, e) =>
             {

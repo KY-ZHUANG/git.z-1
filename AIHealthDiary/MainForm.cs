@@ -198,14 +198,23 @@ namespace AIHealthDiary
             _navContainer.Controls.Add(_navPanel);
             this.Controls.Add(_navContainer);
 
-            // 创建主内容面板
+            // 创建主内容面板容器（用于预留顶部空间）
+            var contentContainer = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(245, 247, 250),
+                Padding = new Padding(0, 70, 0, 0)  // 顶部预留70像素空间，避免被标题栏遮挡
+            };
+
+            // 创建实际的内容面板
             _contentPanel = new Panel
             {
                 Dock = DockStyle.Fill,
                 BackColor = Color.FromArgb(245, 247, 250),
                 Padding = new Padding(20)
             };
-            this.Controls.Add(_contentPanel);
+            contentContainer.Controls.Add(_contentPanel);
+            this.Controls.Add(contentContainer);
 
             // 默认显示首页
             ShowDashboard();
