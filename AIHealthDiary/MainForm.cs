@@ -7,6 +7,7 @@ namespace AIHealthDiary
 {
     /// <summary>
     /// 应用程序主窗体，提供导航和功能入口
+    /// 采用可折叠侧边栏设计
     /// </summary>
     public partial class MainForm : Form
     {
@@ -31,6 +32,16 @@ namespace AIHealthDiary
         private Panel _navPanel;
 
         /// <summary>
+        /// 导航面板容器（用于动画效果）
+        /// </summary>
+        private Panel _navContainer;
+
+        /// <summary>
+        /// 展开/收起按钮
+        /// </summary>
+        private Button _toggleNavBtn;
+
+        /// <summary>
         /// 顶部标题栏
         /// </summary>
         private Panel _headerPanel;
@@ -39,6 +50,21 @@ namespace AIHealthDiary
         /// 用户选择下拉框
         /// </summary>
         private ComboBox _userComboBox;
+
+        /// <summary>
+        /// 导航栏是否展开
+        /// </summary>
+        private bool _isNavExpanded = true;
+
+        /// <summary>
+        /// 导航栏展开宽度
+        /// </summary>
+        private const int NAV_EXPANDED_WIDTH = 200;
+
+        /// <summary>
+        /// 导航栏收起宽度
+        /// </summary>
+        private const int NAV_COLLAPSED_WIDTH = 50;
 
         /// <summary>
         /// 构造函数
@@ -61,7 +87,7 @@ namespace AIHealthDiary
         {
             this.Text = "AI 健康日记与数据管理系统";
             this.Size = new Size(1400, 900);
-            this.MinimumSize = new Size(1200, 800);
+            this.MinimumSize = new Size(1000, 700);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.BackColor = Color.FromArgb(245, 247, 250);
             this.Font = new Font("Microsoft YaHei", 10F, FontStyle.Regular, GraphicsUnit.Point);
@@ -87,7 +113,7 @@ namespace AIHealthDiary
                 Font = new Font("Microsoft YaHei", 16F, FontStyle.Bold),
                 ForeColor = Color.White,
                 AutoSize = true,
-                Location = new Point(20, 15)
+                Location = new Point(70, 15)
             };
             _headerPanel.Controls.Add(titleLabel);
 
@@ -130,35 +156,111 @@ namespace AIHealthDiary
 
             this.Controls.Add(_headerPanel);
 
+            // 创建导航面板容器
+            _navContainer = new Panel
+            {
+                Dock = DockStyle.Left,
+                Width = NAV_EXPANDED_WIDTH,
+                BackColor = Color.FromArgb(38, 50, 56)
+            };
+
+            // 创建展开/收起按钮
+            _toggleNavBtn = new Button
+            {
+                Text = "◀",
+                Size = new Size(40, 40),
+                Location = new Point(5, 10),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.FromArgb(55, 71, 79),
+                ForeColor = Color.White,
+                Font = new Font("Microsoft YaHei", 12F, FontStyle.Bold)
+            };
+            _toggleNavBtn.FlatAppearance.BorderSize = 0;
+            _toggleNavBtn.Click += ToggleNavBtn_Click;
+            _navContainer.Controls.Add(_toggleNavBtn);
+
             // 创建侧边导航面板
             _navPanel = new Panel
             {
-                Dock = DockStyle.Left,
-                Width = 200,
+                Location = new Point(0, 60),
+                Size = new Size(NAV_EXPANDED_WIDTH, 600),
                 BackColor = Color.FromArgb(38, 50, 56)
             };
 
             // 创建导航按钮
-            CreateNavButton("首页", 0, ShowDashboard);
-            CreateNavButton("健康记录", 1, ShowHealthRecords);
-            CreateNavButton("饮食记录", 2, ShowDietRecords);
-            CreateNavButton("运动记录", 3, ShowExerciseRecords);
-            CreateNavButton("AI 分析", 4, ShowAIAnalysis);
-            CreateNavButton("周报", 5, ShowWeeklyReport);
+            CreateNavButton("🏠 首页", 0, ShowDashboard);
+            CreateNavButton("👤 用户管理", 1, ShowUserManagement);
+            CreateNavButton("💓 健康记录", 2, ShowHealthRecords);
+            CreateNavButton("🍽️ 饮食记录", 3, ShowDietRecords);
+            CreateNavButton("🏃 运动记录", 4, ShowExerciseRecords);
+            CreateNavButton("🤖 AI 分析", 5, ShowAIAnalysis);
+            CreateNavButton("📊 周报", 6, ShowWeeklyReport);
 
-            this.Controls.Add(_navPanel);
+            _navContainer.Controls.Add(_navPanel);
+            this.Controls.Add(_navContainer);
 
-            // 创建主内容面板
+            // 创建主内容面板容器（用于预留顶部和左侧空间）
+            var contentContainer = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(245, 247, 250),
+                // 顶部预留70像素避免被标题栏遮挡，左侧预留60像素避免被收起状态的侧边栏遮挡
+                Padding = new Padding(60, 70, 0, 0)
+            };
+
+            // 创建实际的内容面板
             _contentPanel = new Panel
             {
                 Dock = DockStyle.Fill,
                 BackColor = Color.FromArgb(245, 247, 250),
                 Padding = new Padding(20)
             };
-            this.Controls.Add(_contentPanel);
+            contentContainer.Controls.Add(_contentPanel);
+            this.Controls.Add(contentContainer);
 
             // 默认显示首页
             ShowDashboard();
+        }
+
+        /// <summary>
+        /// 展开/收起导航栏按钮点击事件
+        /// </summary>
+        private void ToggleNavBtn_Click(object? sender, EventArgs e)
+        {
+            if (_isNavExpanded)
+            {
+                // 收起导航栏
+                CollapseNavPanel();
+            }
+            else
+            {
+                // 展开导航栏
+                ExpandNavPanel();
+            }
+        }
+
+        /// <summary>
+        /// 展开导航栏
+        /// </summary>
+        private void ExpandNavPanel()
+        {
+            _navContainer.Width = NAV_EXPANDED_WIDTH;
+            _navPanel.Visible = true;
+            _toggleNavBtn.Text = "◀";
+            _toggleNavBtn.Location = new Point(5, 10);
+            _isNavExpanded = true;
+        }
+
+        /// <summary>
+        /// 收起导航栏
+        /// </summary>
+        private void CollapseNavPanel()
+        {
+            _navContainer.Width = NAV_COLLAPSED_WIDTH;
+            _navPanel.Visible = false;
+            _toggleNavBtn.Text = "▶";
+            _toggleNavBtn.Location = new Point(5, 10);
+            _isNavExpanded = false;
         }
 
         /// <summary>
@@ -289,7 +391,84 @@ namespace AIHealthDiary
             _contentPanel.Controls.Clear();
             var dashboard = new DashboardControl(_dbManager, _currentUser);
             dashboard.Dock = DockStyle.Fill;
+            // 订阅快捷操作事件
+            dashboard.OnQuickAction += HandleQuickAction;
             _contentPanel.Controls.Add(dashboard);
+        }
+
+        /// <summary>
+        /// 处理首页快捷操作
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        private void HandleQuickAction(string action)
+        {
+            if (_currentUser == null)
+            {
+                MessageBox.Show("请先选择或添加用户", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            switch (action)
+            {
+                case "health":
+                    ShowHealthRecords();
+                    HighlightNavButton(2);
+                    break;
+                case "diet":
+                    ShowDietRecords();
+                    HighlightNavButton(3);
+                    break;
+                case "exercise":
+                    ShowExerciseRecords();
+                    HighlightNavButton(4);
+                    break;
+                case "ai":
+                    ShowAIAnalysis();
+                    HighlightNavButton(5);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 高亮指定索引的导航按钮
+        /// </summary>
+        /// <param name="index">按钮索引</param>
+        private void HighlightNavButton(int index)
+        {
+            // 重置所有按钮颜色
+            foreach (Control ctrl in _navPanel.Controls)
+            {
+                if (ctrl is Button btn)
+                {
+                    btn.BackColor = Color.FromArgb(38, 50, 56);
+                }
+            }
+
+            // 高亮指定按钮
+            foreach (Control ctrl in _navPanel.Controls)
+            {
+                if (ctrl is Button btn && btn.Tag is int btnIndex && btnIndex == index)
+                {
+                    btn.BackColor = Color.FromArgb(0, 150, 136);
+                    break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 显示用户管理界面
+        /// </summary>
+        private void ShowUserManagement(object? sender = null, EventArgs? e = null)
+        {
+            _contentPanel.Controls.Clear();
+            var userControl = new UserManagementControl(_dbManager, _currentUser);
+            userControl.Dock = DockStyle.Fill;
+            userControl.OnUserUpdated += (user) =>
+            {
+                _currentUser = user;
+                LoadUsers();
+            };
+            _contentPanel.Controls.Add(userControl);
         }
 
         /// <summary>
