@@ -373,6 +373,8 @@ const RecommendationPage: React.FC = () => {
 
   const handleReroll = () => {
     setRerollCount((prev) => prev + 1);
+    // 清除保留的菜，重新推荐
+    setKeptRecipes([]);
     // 直接进入加载状态重新生成推荐
     generateRecommendation();
   };
