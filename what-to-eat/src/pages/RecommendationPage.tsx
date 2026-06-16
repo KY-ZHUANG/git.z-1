@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, ChefHat, Ban, Settings2, RefreshCw, Check } from 'lucide-react';
+import { Plus, X, ChefHat, Ban, Settings2, RefreshCw, Check, Flame } from 'lucide-react';
 import type { Recommendation, Recipe } from '../types';
 import { RecommendationDisplay, InitialState, LoadingState } from '../components/recommendation/RecommendationCard';
 import { formatDate } from '../utils/format';
@@ -68,6 +69,7 @@ function isIngredientMatch(ingredientName: string, searchTerm: string): boolean 
 }
 
 const RecommendationPage: React.FC = () => {
+  const navigate = useNavigate();
   const [state, setState] = useState<'initial' | 'loading' | 'result'>('initial');
   const [currentRecommendation, setCurrentRecommendation] = useState<Recommendation | null>(null);
   const [history, setHistory] = useState<Recommendation[]>([]);
@@ -80,6 +82,8 @@ const RecommendationPage: React.FC = () => {
   const [availableIngredients, setAvailableIngredients] = useState<string[]>([]);
   const [excludedFoods, setExcludedFoods] = useState<string[]>([]);
   const [recommendCount, setRecommendCount] = useState(3);
+  const [targetCalories, setTargetCalories] = useState<number | undefined>(undefined);
+  const [calorieTolerance, setCalorieTolerance] = useState(200); // 默认误差范围200卡
   const [tempIngredient, setTempIngredient] = useState('');
   const [tempExcluded, setTempExcluded] = useState('');
   
@@ -162,12 +166,53 @@ const RecommendationPage: React.FC = () => {
       .map(item => item.recipe);
   }, [availableIngredients, getMatchCount]);
 
+  // 计算菜谱组合的卡路里总和
+  const getTotalCalories = useCallback((recipes: Recipe[]): number => {
+    return recipes.reduce((sum, r) => sum + (r.calories || 0), 0);
+  }, []);
+
+  // 根据目标卡路里筛选和排序菜谱组合
+  const filterByCalories = useCallback((recipes: Recipe[]): Recipe[] => {
+    if (!targetCalories || recipes.length === 0) return recipes;
+    
+    // 为每道菜计算一个"理想度"分数
+    const scoredRecipes = recipes.map(recipe => {
+      const currentTotal = getTotalCalories([...keptRecipes, recipe]);
+      const remainingCount = recommendCount - keptRecipes.length - 1;
+      
+      // 预估剩余菜品的平均卡路里
+      const avgRemainingCalories = remainingCount > 0 
+        ? (targetCalories - getTotalCalories(keptRecipes) - (recipe.calories || 0)) / remainingCount
+        : 0;
+      
+      // 计算与目标的差距
+      const projectedTotal = getTotalCalories([...keptRecipes, recipe]) + (avgRemainingCalories * remainingCount);
+      const diff = Math.abs(projectedTotal - targetCalories);
+      
+      return { recipe, score: diff };
+    });
+    
+    // 按差距从小到大排序
+    return scoredRecipes
+      .sort((a, b) => a.score - b.score)
+      .map(item => item.recipe);
+  }, [targetCalories, keptRecipes, recommendCount, getTotalCalories]);
+
   const generateRecommendation = useCallback(() => {
     setState('loading');
     setLoadingMessage(LOADING_MESSAGES[Math.floor(Math.random() * LOADING_MESSAGES.length)]);
 
     const recipes = loadRecipes();
-    const filteredRecipes = filterRecipes(recipes);
+    let filteredRecipes = filterRecipes(recipes);
+    
+    // 如果有卡路里目标，先过滤掉明显超标的单个菜品
+    if (targetCalories && keptRecipes.length < recommendCount) {
+      const avgCaloriesPerDish = (targetCalories - getTotalCalories(keptRecipes)) / (recommendCount - keptRecipes.length);
+      filteredRecipes = filteredRecipes.filter(r => {
+        if (!r.calories) return true; // 没有卡路里数据的保留
+        return r.calories <= avgCaloriesPerDish + calorieTolerance;
+      });
+    }
     
     // 排除已保留的菜
     const keptIds = new Set(keptRecipes.map(r => r.id));
@@ -189,10 +234,17 @@ const RecommendationPage: React.FC = () => {
     setTimeout(() => {
       let selectedRecipes: Recipe[] = [...keptRecipes];
       
-      // 根据已有食材排序（先排序，然后在匹配度相同的菜中随机）
-      const sortedMeat = sortByIngredientMatch([...meatRecipes]);
-      const sortedVeg = sortByIngredientMatch([...vegRecipes]);
-      const sortedDessert = sortByIngredientMatch([...dessertRecipes]);
+      // 根据已有食材排序
+      let sortedMeat = sortByIngredientMatch([...meatRecipes]);
+      let sortedVeg = sortByIngredientMatch([...vegRecipes]);
+      let sortedDessert = sortByIngredientMatch([...dessertRecipes]);
+      
+      // 如果有卡路里目标，再按卡路里匹配度排序
+      if (targetCalories) {
+        sortedMeat = filterByCalories(sortedMeat);
+        sortedVeg = filterByCalories(sortedVeg);
+        sortedDessert = filterByCalories(sortedDessert);
+      }
       
       // 智能推荐逻辑
       const remainingSlots = neededCount;
@@ -242,7 +294,7 @@ const RecommendationPage: React.FC = () => {
       setState('result');
       setRerollCount(0);
     }, 1500);
-  }, [availableIngredients, excludedFoods, recommendCount, keptRecipes, filterRecipes, sortByIngredientMatch]);
+  }, [availableIngredients, excludedFoods, recommendCount, keptRecipes, targetCalories, calorieTolerance, filterRecipes, sortByIngredientMatch, filterByCalories, getTotalCalories]);
 
   // 保留某个菜
   const handleKeepRecipe = (recipe: Recipe) => {
@@ -450,6 +502,39 @@ const RecommendationPage: React.FC = () => {
                           ))}
                         </div>
                       </div>
+
+                      {/* 卡路里目标 */}
+                      <div>
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                          <Flame size={16} className="text-orange-500" />
+                          目标卡路里（可选）
+                        </label>
+                        <div className="flex gap-2 mb-2">
+                          <input
+                            type="number"
+                            value={targetCalories || ''}
+                            onChange={(e) => setTargetCalories(e.target.value ? Number(e.target.value) : undefined)}
+                            placeholder="如：800"
+                            className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none text-sm"
+                          />
+                          <span className="flex items-center text-sm text-gray-500">kcal</span>
+                        </div>
+                        {targetCalories && (
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <span>误差范围：</span>
+                            <input
+                              type="range"
+                              min="50"
+                              max="500"
+                              step="50"
+                              value={calorieTolerance}
+                              onChange={(e) => setCalorieTolerance(Number(e.target.value))}
+                              className="flex-1"
+                            />
+                            <span>±{calorieTolerance}</span>
+                          </div>
+                        )}
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -492,6 +577,17 @@ const RecommendationPage: React.FC = () => {
                 </div>
               )}
 
+              {/* 卡路里提示 */}
+              {targetCalories && (
+                <div className="bg-orange-50 border border-orange-200 rounded-card p-3">
+                  <p className="text-sm text-orange-800">
+                    目标卡路里：{targetCalories} kcal | 
+                    当前推荐：{getTotalCalories(currentRecipes)} kcal | 
+                    差距：{Math.abs(getTotalCalories(currentRecipes) - targetCalories)} kcal
+                  </p>
+                </div>
+              )}
+
               {/* 保留的菜品提示 */}
               {keptRecipes.length > 0 && (
                 <div className="bg-green-50 border border-green-200 rounded-card p-3">
@@ -509,7 +605,8 @@ const RecommendationPage: React.FC = () => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="bg-white rounded-2xl p-4 shadow-sm"
+                    className="bg-white rounded-2xl p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => navigate(`/recipe/${recipe.id}`)}
                   >
                     <div className="flex gap-4">
                       <img
@@ -520,11 +617,18 @@ const RecommendationPage: React.FC = () => {
                       <div className="flex-1">
                         <div className="flex items-start justify-between">
                           <h3 className="font-semibold text-gray-800">{recipe.name}</h3>
-                          {availableIngredients.length > 0 && getMatchCount(recipe) > 0 && (
-                            <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
-                              匹配{getMatchCount(recipe)}种食材
-                            </span>
-                          )}
+                          <div className="flex gap-1">
+                            {recipe.calories && (
+                              <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded-full">
+                                {recipe.calories}kcal
+                              </span>
+                            )}
+                            {availableIngredients.length > 0 && getMatchCount(recipe) > 0 && (
+                              <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
+                                匹配{getMatchCount(recipe)}种食材
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <p className="text-sm text-gray-500 mt-1">
                           {recipe.time}分钟 · {recipe.difficulty === 'easy' ? '简单' : recipe.difficulty === 'medium' ? '中等' : '困难'}
