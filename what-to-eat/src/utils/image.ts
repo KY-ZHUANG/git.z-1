@@ -9,6 +9,44 @@ function getPicsumUrl(seed: string, width: number = 400, height: number = 300): 
   return `https://picsum.photos/seed/${seed}${id}/${width}/${height}`;
 }
 
+// 菜品图片关键词映射 - 使用更具体的食物相关关键词
+const DISH_IMAGE_KEYWORDS: Record<string, string> = {
+  // 荤菜 - 使用肉类相关关键词
+  '红烧肉': 'pork-braised',
+  '糖醋排骨': 'pork-ribs',
+  '可乐鸡翅': 'chicken-wings',
+  '番茄炒蛋': 'tomato-egg',
+  '鱼香肉丝': 'shredded-pork',
+  '宫保鸡丁': 'kung-pao-chicken',
+  '清蒸鲈鱼': 'steamed-fish',
+  '黑椒牛柳': 'beef-stirfry',
+  '蒜蓉粉丝虾': 'shrimp-garlic',
+  '回锅肉': 'twice-cooked-pork',
+  '啤酒鸭': 'duck-beer',
+  '土豆炖牛腩': 'beef-stew',
+  
+  // 素菜 - 使用蔬菜相关关键词
+  '地三鲜': 'vegetable-stirfry',
+  '麻婆豆腐': 'mapo-tofu',
+  '蒜蓉西兰花': 'broccoli-garlic',
+  '干煸四季豆': 'green-beans',
+  '凉拌黄瓜': 'cucumber-salad',
+  '醋溜白菜': 'cabbage-sour',
+  '红烧茄子': 'eggplant-braised',
+  '干锅花菜': 'cauliflower-drypot',
+  '清炒时蔬': 'vegetable-stirfry',
+  '香菇油菜': 'mushroom-greens',
+  '凉拌木耳': 'wood-ear-salad',
+  
+  // 甜品 - 使用甜点相关关键词
+  '蛋挞': 'egg-tart',
+  '芒果班戟': 'mango-pancake',
+  '红豆沙': 'red-bean-soup',
+  '双皮奶': 'milk-pudding',
+  '提拉米苏': 'tiramisu-cake',
+  '杨枝甘露': 'mango-dessert',
+};
+
 const FOOD_IMAGES: Record<string, string[]> = {
   // 健康食材
   '燕麦': [getPicsumUrl('oats')],
@@ -124,18 +162,11 @@ export function getRecipeImage(recipeId: string, recipeName: string): string {
     return imageCache[cacheKey];
   }
 
-  const images = FOOD_IMAGES[recipeName];
-  let imageUrl: string;
-
-  if (images && images.length > 0) {
-    // 使用菜品名称的哈希值来选择图片，确保一致性
-    const index = Math.abs(hashCode(recipeName)) % images.length;
-    imageUrl = images[index];
-  } else {
-    // 对于没有预定义图片的菜品，使用菜品名称的哈希值选择回退图片
-    const index = Math.abs(hashCode(recipeName)) % FALLBACK_IMAGES.length;
-    imageUrl = FALLBACK_IMAGES[index];
-  }
+  // 使用特定的图片关键词，如果没有则使用菜品名
+  const imageKeyword = DISH_IMAGE_KEYWORDS[recipeName] || recipeName;
+  
+  // 生成图片URL - 使用关键词确保同类菜品有相似风格的图片
+  const imageUrl = getPicsumUrl(imageKeyword);
 
   imageCache[cacheKey] = imageUrl;
   return imageUrl;
