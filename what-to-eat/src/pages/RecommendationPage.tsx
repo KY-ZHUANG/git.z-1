@@ -618,10 +618,10 @@ const RecommendationPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleBackToInitial}
-                  className="flex items-center gap-1 text-gray-600 hover:text-primary transition-colors"
+                  className="flex items-center gap-1 px-3 py-2 bg-white border-2 border-gray-200 rounded-lg text-gray-600 hover:border-primary hover:text-primary transition-colors shadow-sm"
                 >
-                  <ArrowLeft size={20} />
-                  <span className="text-sm">返回</span>
+                  <ArrowLeft size={18} />
+                  <span className="text-sm font-medium">返回</span>
                 </button>
               </div>
 
