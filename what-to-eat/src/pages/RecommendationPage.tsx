@@ -93,7 +93,43 @@ const RecommendationPage: React.FC = () => {
 
   useEffect(() => {
     setHistory(getRecommendationHistory());
+    
+    // 从 sessionStorage 恢复状态
+    const savedState = sessionStorage.getItem('recommendationState');
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        if (parsed.currentRecommendation) {
+          setCurrentRecommendation(parsed.currentRecommendation);
+          setCurrentRecipes(parsed.currentRecipes || []);
+          setKeptRecipes(parsed.keptRecipes || []);
+          setAvailableIngredients(parsed.availableIngredients || []);
+          setExcludedFoods(parsed.excludedFoods || []);
+          setTargetCalories(parsed.targetCalories);
+          setRecommendCount(parsed.recommendCount || 3);
+          setState('result');
+        }
+      } catch (e) {
+        console.error('Failed to restore state:', e);
+      }
+    }
   }, []);
+
+  // 保存状态到 sessionStorage
+  useEffect(() => {
+    if (state === 'result' && currentRecommendation) {
+      const stateToSave = {
+        currentRecommendation,
+        currentRecipes,
+        keptRecipes,
+        availableIngredients,
+        excludedFoods,
+        targetCalories,
+        recommendCount,
+      };
+      sessionStorage.setItem('recommendationState', JSON.stringify(stateToSave));
+    }
+  }, [state, currentRecommendation, currentRecipes, keptRecipes, availableIngredients, excludedFoods, targetCalories, recommendCount]);
 
   // 添加已有食材
   const addAvailableIngredient = () => {
@@ -644,10 +680,13 @@ const RecommendationPage: React.FC = () => {
                     </div>
                     
                     {/* 操作按钮 */}
-                    <div className="flex gap-2 mt-3">
+                    <div className="flex gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
                       {keptRecipes.find(r => r.id === recipe.id) ? (
                         <button
-                          onClick={() => handleUnkeepRecipe(recipe)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUnkeepRecipe(recipe);
+                          }}
                           className="flex-1 flex items-center justify-center gap-1 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium transition-colors"
                         >
                           <Check size={16} />
@@ -655,7 +694,10 @@ const RecommendationPage: React.FC = () => {
                         </button>
                       ) : (
                         <button
-                          onClick={() => handleKeepRecipe(recipe)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleKeepRecipe(recipe);
+                          }}
                           className="flex-1 flex items-center justify-center gap-1 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-green-100 hover:text-green-700 transition-colors"
                         >
                           <Check size={16} />
@@ -663,7 +705,10 @@ const RecommendationPage: React.FC = () => {
                         </button>
                       )}
                       <button
-                        onClick={() => handleRerollSingle(recipe)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRerollSingle(recipe);
+                        }}
                         className="flex-1 flex items-center justify-center gap-1 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-orange-100 hover:text-orange-700 transition-colors"
                       >
                         <RefreshCw size={16} />
