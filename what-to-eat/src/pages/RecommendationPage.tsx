@@ -373,15 +373,86 @@ const RecommendationPage: React.FC = () => {
 
   const handleReroll = () => {
     setRerollCount((prev) => prev + 1);
-    // 保留已保留的菜，清除当前推荐的其他菜
-    // 从 currentRecipes 中只保留 keptRecipes 中的菜
-    const keptIds = new Set(keptRecipes.map(r => r.id));
-    const newCurrentRecipes = currentRecipes.filter(r => keptIds.has(r.id));
-    setCurrentRecipes(newCurrentRecipes);
-    // 重新生成推荐
+    // 直接进入加载状态重新生成推荐
+    // generateRecommendation 会自动处理 keptRecipes
+    setState('loading');
+    setLoadingMessage(LOADING_MESSAGES[Math.floor(Math.random() * LOADING_MESSAGES.length)]);
+    
     setTimeout(() => {
-      generateRecommendation();
-    }, 0);
+      const recipes = loadRecipes();
+      const filteredRecipes = filterRecipes(recipes);
+      
+      // 排除已保留的菜
+      const keptIds = new Set(keptRecipes.map(r => r.id));
+      const availableRecipes = filteredRecipes.filter(r => !keptIds.has(r.id));
+      
+      const meatRecipes = availableRecipes.filter((r: Recipe) => r.category === 'meat');
+      const vegRecipes = availableRecipes.filter((r: Recipe) => r.category === 'vegetable');
+      const dessertRecipes = availableRecipes.filter((r: Recipe) => r.category === 'dessert');
+
+      const neededCount = recommendCount - keptRecipes.length;
+      
+      if (availableRecipes.length < neededCount) {
+        alert('符合条件的菜谱不足，请减少排除条件或添加更多菜谱！');
+        setState('result');
+        return;
+      }
+
+      let selectedRecipes: Recipe[] = [...keptRecipes];
+      
+      // 随机排序
+      const shuffledMeat = [...meatRecipes].sort(() => Math.random() - 0.5);
+      const shuffledVeg = [...vegRecipes].sort(() => Math.random() - 0.5);
+      const shuffledDessert = [...dessertRecipes].sort(() => Math.random() - 0.5);
+      
+      // 智能推荐逻辑
+      const remainingSlots = neededCount;
+      
+      if (remainingSlots > 0) {
+        // 优先荤素搭配
+        if (shuffledMeat.length > 0 && shuffledVeg.length > 0) {
+          const meatCount = Math.min(Math.ceil(remainingSlots / 2), shuffledMeat.length);
+          const vegCount = Math.min(remainingSlots - meatCount, shuffledVeg.length);
+          
+          selectedRecipes = [...selectedRecipes, ...shuffledMeat.slice(0, meatCount)];
+          selectedRecipes = [...selectedRecipes, ...shuffledVeg.slice(0, vegCount)];
+        } else if (shuffledMeat.length > 0) {
+          selectedRecipes = [...selectedRecipes, ...shuffledMeat.slice(0, remainingSlots)];
+        } else if (shuffledVeg.length > 0) {
+          selectedRecipes = [...selectedRecipes, ...shuffledVeg.slice(0, remainingSlots)];
+        } else if (shuffledDessert.length > 0) {
+          selectedRecipes = [...selectedRecipes, ...shuffledDessert.slice(0, remainingSlots)];
+        }
+      }
+      
+      // 如果数量不够，随机补充
+      const allRecipes = [...shuffledMeat, ...shuffledVeg, ...shuffledDessert]
+        .filter(r => !selectedRecipes.find(sr => sr.id === r.id));
+      
+      while (selectedRecipes.length < recommendCount && allRecipes.length > 0) {
+        const randomIndex = Math.floor(Math.random() * allRecipes.length);
+        const nextRecipe = allRecipes.splice(randomIndex, 1)[0];
+        if (nextRecipe && !selectedRecipes.find(r => r.id === nextRecipe.id)) {
+          selectedRecipes.push(nextRecipe);
+        }
+      }
+
+      const hour = new Date().getHours();
+      const mealType = hour >= 5 && hour < 10 ? 'breakfast' : hour >= 10 && hour < 14 ? 'lunch' : hour >= 17 && hour < 21 ? 'dinner' : 'lunch';
+
+      const recommendation: Recommendation = {
+        id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+        date: Date.now(),
+        recipes: selectedRecipes.slice(0, recommendCount) as [Recipe, Recipe, Recipe],
+        isFavorite: false,
+        note: '',
+        mealType: mealType as 'breakfast' | 'lunch' | 'dinner',
+      };
+
+      setCurrentRecommendation(recommendation);
+      setCurrentRecipes(selectedRecipes.slice(0, recommendCount));
+      setState('result');
+    }, 1500);
   };
 
   const handleBackToInitial = () => {
