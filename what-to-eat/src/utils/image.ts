@@ -118,7 +118,8 @@ function hashCode(str: string): number {
 }
 
 export function getRecipeImage(recipeId: string, recipeName: string): string {
-  const cacheKey = `${recipeId}-${recipeName}`;
+  // 使用菜品名称作为缓存键，确保相同菜品始终显示相同图片
+  const cacheKey = `recipe-${recipeName}`;
   if (imageCache[cacheKey]) {
     return imageCache[cacheKey];
   }
@@ -127,10 +128,12 @@ export function getRecipeImage(recipeId: string, recipeName: string): string {
   let imageUrl: string;
 
   if (images && images.length > 0) {
-    const index = Math.abs(hashCode(recipeId)) % images.length;
+    // 使用菜品名称的哈希值来选择图片，确保一致性
+    const index = Math.abs(hashCode(recipeName)) % images.length;
     imageUrl = images[index];
   } else {
-    const index = Math.abs(hashCode(recipeId)) % FALLBACK_IMAGES.length;
+    // 对于没有预定义图片的菜品，使用菜品名称的哈希值选择回退图片
+    const index = Math.abs(hashCode(recipeName)) % FALLBACK_IMAGES.length;
     imageUrl = FALLBACK_IMAGES[index];
   }
 
