@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, ChefHat, Ban, Settings2, RefreshCw, Check, Flame } from 'lucide-react';
+import { Plus, X, ChefHat, Ban, Settings2, RefreshCw, Check, Flame, ArrowLeft } from 'lucide-react';
 import type { Recommendation, Recipe } from '../types';
 import { RecommendationDisplay, InitialState, LoadingState } from '../components/recommendation/RecommendationCard';
 import { formatDate } from '../utils/format';
@@ -373,8 +373,24 @@ const RecommendationPage: React.FC = () => {
 
   const handleReroll = () => {
     setRerollCount((prev) => prev + 1);
-    // 保留已保留的菜，重新推荐其他的
-    generateRecommendation();
+    // 清除当前推荐，但保留筛选条件
+    setCurrentRecipes([]);
+    setCurrentRecommendation(null);
+    // 重新生成推荐
+    setTimeout(() => {
+      generateRecommendation();
+    }, 100);
+  };
+
+  const handleBackToInitial = () => {
+    // 清除 sessionStorage 中的状态
+    sessionStorage.removeItem('recommendationState');
+    // 重置所有状态
+    setState('initial');
+    setCurrentRecommendation(null);
+    setCurrentRecipes([]);
+    setKeptRecipes([]);
+    setRerollCount(0);
   };
 
   const handleFavorite = () => {
@@ -598,6 +614,17 @@ const RecommendationPage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-4"
             >
+              {/* 返回按钮 */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleBackToInitial}
+                  className="flex items-center gap-1 text-gray-600 hover:text-primary transition-colors"
+                >
+                  <ArrowLeft size={20} />
+                  <span className="text-sm">返回</span>
+                </button>
+              </div>
+
               {rerollCount >= 3 && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-card p-3 text-sm text-yellow-800 text-center">
                   已经推荐了{rerollCount + 1}次啦，要不要换个口味试试？
