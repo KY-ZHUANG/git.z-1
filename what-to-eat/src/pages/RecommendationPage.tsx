@@ -73,20 +73,37 @@ const RecommendationPage: React.FC = () => {
     });
   }, [excludedFoods]);
 
-  // 根据食材匹配度排序
+  // 计算菜谱与已有食材的匹配数量
+  const getMatchCount = useCallback((recipe: Recipe): number => {
+    if (availableIngredients.length === 0) return 0;
+    return recipe.ingredients.filter(ing => 
+      availableIngredients.some(avail => 
+        ing.name.toLowerCase().includes(avail.toLowerCase()) ||
+        avail.toLowerCase().includes(ing.name.toLowerCase())
+      )
+    ).length;
+  }, [availableIngredients]);
+
+  // 根据食材匹配度排序，匹配度高的优先
   const sortByIngredientMatch = useCallback((recipes: Recipe[]) => {
     if (availableIngredients.length === 0) return recipes;
     
-    return [...recipes].sort((a, b) => {
-      const aMatch = a.ingredients.filter(ing => 
-        availableIngredients.some(avail => ing.name.includes(avail))
-      ).length;
-      const bMatch = b.ingredients.filter(ing => 
-        availableIngredients.some(avail => ing.name.includes(avail))
-      ).length;
-      return bMatch - aMatch;
+    // 计算每个菜谱的匹配分数
+    const scoredRecipes = recipes.map(recipe => {
+      const score = getMatchCount(recipe);
+      return { recipe, score };
     });
-  }, [availableIngredients]);
+    
+    // 按匹配分数降序排序，分数相同的随机排序
+    return scoredRecipes
+      .sort((a, b) => {
+        if (b.score !== a.score) {
+          return b.score - a.score; // 分数高的在前
+        }
+        return Math.random() - 0.5; // 分数相同则随机
+      })
+      .map(item => item.recipe);
+  }, [availableIngredients, getMatchCount]);
 
   const generateRecommendation = useCallback(() => {
     setState('loading');
@@ -115,10 +132,10 @@ const RecommendationPage: React.FC = () => {
     setTimeout(() => {
       let selectedRecipes: Recipe[] = [...keptRecipes];
       
-      // 根据已有食材排序
-      const sortedMeat = sortByIngredientMatch([...meatRecipes]).sort(() => Math.random() - 0.5);
-      const sortedVeg = sortByIngredientMatch([...vegRecipes]).sort(() => Math.random() - 0.5);
-      const sortedDessert = sortByIngredientMatch([...dessertRecipes]).sort(() => Math.random() - 0.5);
+      // 根据已有食材排序（先排序，然后在匹配度相同的菜中随机）
+      const sortedMeat = sortByIngredientMatch([...meatRecipes]);
+      const sortedVeg = sortByIngredientMatch([...vegRecipes]);
+      const sortedDessert = sortByIngredientMatch([...dessertRecipes]);
       
       // 智能推荐逻辑
       const remainingSlots = neededCount;
@@ -140,14 +157,14 @@ const RecommendationPage: React.FC = () => {
         }
       }
       
-      // 打乱顺序
-      selectedRecipes = selectedRecipes.sort(() => Math.random() - 0.5);
+      // 如果数量不够，从已排序的列表中补充
+      const allSortedRecipes = [...sortedMeat, ...sortedVeg, ...sortedDessert]
+        .filter(r => !selectedRecipes.find(sr => sr.id === r.id));
       
-      // 如果数量不够，随机补充
-      while (selectedRecipes.length < recommendCount && availableRecipes.length > selectedRecipes.length) {
-        const randomRecipe = availableRecipes[Math.floor(Math.random() * availableRecipes.length)];
-        if (!selectedRecipes.find(r => r.id === randomRecipe.id)) {
-          selectedRecipes.push(randomRecipe);
+      while (selectedRecipes.length < recommendCount && allSortedRecipes.length > 0) {
+        const nextRecipe = allSortedRecipes.shift();
+        if (nextRecipe && !selectedRecipes.find(r => r.id === nextRecipe.id)) {
+          selectedRecipes.push(nextRecipe);
         }
       }
 
@@ -409,6 +426,15 @@ const RecommendationPage: React.FC = () => {
                 </div>
               )}
 
+              {/* 食材匹配提示 */}
+              {availableIngredients.length > 0 && (
+                <div className="bg-blue-50 border border-blue-200 rounded-card p-3">
+                  <p className="text-sm text-blue-800">
+                    根据食材「{availableIngredients.join('、')}」推荐
+                  </p>
+                </div>
+              )}
+
               {/* 保留的菜品提示 */}
               {keptRecipes.length > 0 && (
                 <div className="bg-green-50 border border-green-200 rounded-card p-3">
@@ -435,7 +461,14 @@ const RecommendationPage: React.FC = () => {
                         className="w-24 h-24 rounded-xl object-cover"
                       />
                       <div className="flex-1">
-                        <h3 className="font-semibold text-gray-800">{recipe.name}</h3>
+                        <div className="flex items-start justify-between">
+                          <h3 className="font-semibold text-gray-800">{recipe.name}</h3>
+                          {availableIngredients.length > 0 && getMatchCount(recipe) > 0 && (
+                            <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
+                              匹配{getMatchCount(recipe)}种食材
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm text-gray-500 mt-1">
                           {recipe.time}分钟 · {recipe.difficulty === 'easy' ? '简单' : recipe.difficulty === 'medium' ? '中等' : '困难'}
                         </p>
