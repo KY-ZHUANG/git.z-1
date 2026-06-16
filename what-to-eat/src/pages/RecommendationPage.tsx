@@ -373,13 +373,8 @@ const RecommendationPage: React.FC = () => {
 
   const handleReroll = () => {
     setRerollCount((prev) => prev + 1);
-    // 清除当前推荐，但保留筛选条件
-    setCurrentRecipes([]);
-    setCurrentRecommendation(null);
-    // 重新生成推荐
-    setTimeout(() => {
-      generateRecommendation();
-    }, 100);
+    // 直接进入加载状态重新生成推荐
+    generateRecommendation();
   };
 
   const handleBackToInitial = () => {
