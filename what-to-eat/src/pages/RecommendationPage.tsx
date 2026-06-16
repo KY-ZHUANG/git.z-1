@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, X, ChefHat, Ban, Settings2, RefreshCw, Check } from 'lucide-react';
 import type { Recommendation, Recipe } from '../types';
 import { RecommendationDisplay, InitialState, LoadingState } from '../components/recommendation/RecommendationCard';
 import { formatDate } from '../utils/format';
@@ -13,54 +14,204 @@ const RecommendationPage: React.FC = () => {
   const [loadingMessage, setLoadingMessage] = useState('');
   const [rerollCount, setRerollCount] = useState(0);
   const [showHistory, setShowHistory] = useState(false);
+  
+  // 筛选状态
+  const [showFilters, setShowFilters] = useState(false);
+  const [availableIngredients, setAvailableIngredients] = useState<string[]>([]);
+  const [excludedFoods, setExcludedFoods] = useState<string[]>([]);
+  const [recommendCount, setRecommendCount] = useState(3);
+  const [tempIngredient, setTempIngredient] = useState('');
+  const [tempExcluded, setTempExcluded] = useState('');
+  
+  // 保留状态
+  const [keptRecipes, setKeptRecipes] = useState<Recipe[]>([]);
+  const [currentRecipes, setCurrentRecipes] = useState<Recipe[]>([]);
 
   useEffect(() => {
     setHistory(getRecommendationHistory());
   }, []);
+
+  // 添加已有食材
+  const addAvailableIngredient = () => {
+    if (tempIngredient.trim() && !availableIngredients.includes(tempIngredient.trim())) {
+      setAvailableIngredients([...availableIngredients, tempIngredient.trim()]);
+      setTempIngredient('');
+    }
+  };
+
+  // 移除已有食材
+  const removeAvailableIngredient = (ingredient: string) => {
+    setAvailableIngredients(availableIngredients.filter(i => i !== ingredient));
+  };
+
+  // 添加不想吃的食物
+  const addExcludedFood = () => {
+    if (tempExcluded.trim() && !excludedFoods.includes(tempExcluded.trim())) {
+      setExcludedFoods([...excludedFoods, tempExcluded.trim()]);
+      setTempExcluded('');
+    }
+  };
+
+  // 移除不想吃的食物
+  const removeExcludedFood = (food: string) => {
+    setExcludedFoods(excludedFoods.filter(f => f !== food));
+  };
+
+  // 筛选菜谱
+  const filterRecipes = useCallback((recipes: Recipe[]) => {
+    return recipes.filter(recipe => {
+      // 排除不想吃的食物
+      const isExcluded = excludedFoods.some(excluded => 
+        recipe.name.includes(excluded) || 
+        recipe.ingredients.some(ing => ing.name.includes(excluded))
+      );
+      if (isExcluded) return false;
+
+      // 如果有指定食材，优先推荐包含这些食材的菜
+      // 但不强制要求，只是排序时会优先
+      return true;
+    });
+  }, [excludedFoods]);
+
+  // 根据食材匹配度排序
+  const sortByIngredientMatch = useCallback((recipes: Recipe[]) => {
+    if (availableIngredients.length === 0) return recipes;
+    
+    return [...recipes].sort((a, b) => {
+      const aMatch = a.ingredients.filter(ing => 
+        availableIngredients.some(avail => ing.name.includes(avail))
+      ).length;
+      const bMatch = b.ingredients.filter(ing => 
+        availableIngredients.some(avail => ing.name.includes(avail))
+      ).length;
+      return bMatch - aMatch;
+    });
+  }, [availableIngredients]);
 
   const generateRecommendation = useCallback(() => {
     setState('loading');
     setLoadingMessage(LOADING_MESSAGES[Math.floor(Math.random() * LOADING_MESSAGES.length)]);
 
     const recipes = loadRecipes();
-    const meatRecipes = recipes.filter((r: Recipe) => r.category === 'meat');
-    const vegRecipes = recipes.filter((r: Recipe) => r.category === 'vegetable');
+    const filteredRecipes = filterRecipes(recipes);
+    
+    // 排除已保留的菜
+    const keptIds = new Set(keptRecipes.map(r => r.id));
+    const availableRecipes = filteredRecipes.filter(r => !keptIds.has(r.id));
+    
+    const meatRecipes = availableRecipes.filter((r: Recipe) => r.category === 'meat');
+    const vegRecipes = availableRecipes.filter((r: Recipe) => r.category === 'vegetable');
+    const dessertRecipes = availableRecipes.filter((r: Recipe) => r.category === 'dessert');
 
-    if (meatRecipes.length < 1 || vegRecipes.length < 2) {
-      alert('菜谱库食材不足，请先添加更多菜谱！');
+    // 计算需要推荐的数量
+    const neededCount = recommendCount - keptRecipes.length;
+    
+    if (availableRecipes.length < neededCount) {
+      alert('符合条件的菜谱不足，请减少排除条件或添加更多菜谱！');
       setState('initial');
       return;
     }
 
     setTimeout(() => {
-      const shuffledMeat = [...meatRecipes].sort(() => Math.random() - 0.5);
-      const shuffledVeg = [...vegRecipes].sort(() => Math.random() - 0.5);
+      let selectedRecipes: Recipe[] = [...keptRecipes];
+      
+      // 根据已有食材排序
+      const sortedMeat = sortByIngredientMatch([...meatRecipes]).sort(() => Math.random() - 0.5);
+      const sortedVeg = sortByIngredientMatch([...vegRecipes]).sort(() => Math.random() - 0.5);
+      const sortedDessert = sortByIngredientMatch([...dessertRecipes]).sort(() => Math.random() - 0.5);
+      
+      // 智能推荐逻辑
+      const remainingSlots = neededCount;
+      
+      if (remainingSlots > 0) {
+        // 优先荤素搭配
+        if (sortedMeat.length > 0 && sortedVeg.length > 0) {
+          const meatCount = Math.min(Math.ceil(remainingSlots / 2), sortedMeat.length);
+          const vegCount = Math.min(remainingSlots - meatCount, sortedVeg.length);
+          
+          selectedRecipes = [...selectedRecipes, ...sortedMeat.slice(0, meatCount)];
+          selectedRecipes = [...selectedRecipes, ...sortedVeg.slice(0, vegCount)];
+        } else if (sortedMeat.length > 0) {
+          selectedRecipes = [...selectedRecipes, ...sortedMeat.slice(0, remainingSlots)];
+        } else if (sortedVeg.length > 0) {
+          selectedRecipes = [...selectedRecipes, ...sortedVeg.slice(0, remainingSlots)];
+        } else if (sortedDessert.length > 0) {
+          selectedRecipes = [...selectedRecipes, ...sortedDessert.slice(0, remainingSlots)];
+        }
+      }
+      
+      // 打乱顺序
+      selectedRecipes = selectedRecipes.sort(() => Math.random() - 0.5);
+      
+      // 如果数量不够，随机补充
+      while (selectedRecipes.length < recommendCount && availableRecipes.length > selectedRecipes.length) {
+        const randomRecipe = availableRecipes[Math.floor(Math.random() * availableRecipes.length)];
+        if (!selectedRecipes.find(r => r.id === randomRecipe.id)) {
+          selectedRecipes.push(randomRecipe);
+        }
+      }
 
-      const pick1 = shuffledVeg[0];
-      const pick2 = shuffledVeg[1];
-      const pick3 = shuffledMeat[0];
-
-      const combo = [pick1, pick2, pick3].sort(() => Math.random() - 0.5);
       const hour = new Date().getHours();
       const mealType = hour >= 5 && hour < 10 ? 'breakfast' : hour >= 10 && hour < 14 ? 'lunch' : hour >= 17 && hour < 21 ? 'dinner' : 'lunch';
 
       const recommendation: Recommendation = {
         id: Date.now().toString(36) + Math.random().toString(36).substr(2),
         date: Date.now(),
-        recipes: [combo[0], combo[1], combo[2]],
+        recipes: selectedRecipes.slice(0, recommendCount) as [Recipe, Recipe, Recipe],
         isFavorite: false,
         note: '',
         mealType: mealType as 'breakfast' | 'lunch' | 'dinner',
       };
 
       setCurrentRecommendation(recommendation);
+      setCurrentRecipes(selectedRecipes.slice(0, recommendCount));
       setState('result');
       setRerollCount(0);
     }, 1500);
-  }, []);
+  }, [availableIngredients, excludedFoods, recommendCount, keptRecipes, filterRecipes, sortByIngredientMatch]);
+
+  // 保留某个菜
+  const handleKeepRecipe = (recipe: Recipe) => {
+    if (!keptRecipes.find(r => r.id === recipe.id)) {
+      setKeptRecipes([...keptRecipes, recipe]);
+    }
+  };
+
+  // 取消保留某个菜
+  const handleUnkeepRecipe = (recipe: Recipe) => {
+    setKeptRecipes(keptRecipes.filter(r => r.id !== recipe.id));
+  };
+
+  // 重新推荐单个菜
+  const handleRerollSingle = (recipeToReplace: Recipe) => {
+    const recipes = loadRecipes();
+    const filteredRecipes = filterRecipes(recipes);
+    const keptIds = new Set([...keptRecipes.map(r => r.id), ...currentRecipes.map(r => r.id)]);
+    const availableRecipes = filteredRecipes.filter(r => !keptIds.has(r.id));
+    
+    if (availableRecipes.length === 0) {
+      alert('没有更多可选菜谱了！');
+      return;
+    }
+    
+    const newRecipe = availableRecipes[Math.floor(Math.random() * availableRecipes.length)];
+    const updatedRecipes = currentRecipes.map(r => 
+      r.id === recipeToReplace.id ? newRecipe : r
+    );
+    
+    setCurrentRecipes(updatedRecipes);
+    if (currentRecommendation) {
+      setCurrentRecommendation({
+        ...currentRecommendation,
+        recipes: updatedRecipes as [Recipe, Recipe, Recipe]
+      });
+    }
+    setRerollCount(prev => prev + 1);
+  };
 
   const handleReroll = () => {
     setRerollCount((prev) => prev + 1);
+    // 保留已保留的菜，重新推荐其他的
     generateRecommendation();
   };
 
@@ -98,7 +249,138 @@ const RecommendationPage: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              className="space-y-4"
             >
+              {/* 筛选面板 */}
+              <motion.div 
+                className="bg-white rounded-2xl p-4 shadow-sm"
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
+              >
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <div className="flex items-center gap-2">
+                    <Settings2 size={20} className="text-primary" />
+                    <span className="font-semibold text-gray-800">推荐设置</span>
+                  </div>
+                  <span className="text-sm text-gray-500">
+                    {showFilters ? '收起' : '展开'}
+                  </span>
+                </button>
+
+                <AnimatePresence>
+                  {showFilters && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="space-y-4 mt-4 overflow-hidden"
+                    >
+                      {/* 已有食材 */}
+                      <div>
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                          <ChefHat size={16} className="text-green-500" />
+                          已有食材（可选）
+                        </label>
+                        <div className="flex gap-2 mb-2">
+                          <input
+                            type="text"
+                            value={tempIngredient}
+                            onChange={(e) => setTempIngredient(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && addAvailableIngredient()}
+                            placeholder="输入食材，如：鸡蛋、番茄"
+                            className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none text-sm"
+                          />
+                          <button
+                            type="button"
+                            onClick={addAvailableIngredient}
+                            className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                          >
+                            <Plus size={18} />
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {availableIngredients.map((ing) => (
+                            <span
+                              key={ing}
+                              className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs"
+                            >
+                              {ing}
+                              <button onClick={() => removeAvailableIngredient(ing)}>
+                                <X size={12} />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* 不想吃的食物 */}
+                      <div>
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                          <Ban size={16} className="text-red-500" />
+                          不想吃（可选）
+                        </label>
+                        <div className="flex gap-2 mb-2">
+                          <input
+                            type="text"
+                            value={tempExcluded}
+                            onChange={(e) => setTempExcluded(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && addExcludedFood()}
+                            placeholder="输入不想吃的菜或食材"
+                            className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none text-sm"
+                          />
+                          <button
+                            type="button"
+                            onClick={addExcludedFood}
+                            className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                          >
+                            <Plus size={18} />
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {excludedFoods.map((food) => (
+                            <span
+                              key={food}
+                              className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs"
+                            >
+                              {food}
+                              <button onClick={() => removeExcludedFood(food)}>
+                                <X size={12} />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* 推荐数量 */}
+                      <div>
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                          <span>推荐数量</span>
+                        </label>
+                        <div className="flex gap-2">
+                          {[2, 3, 4, 5].map((num) => (
+                            <button
+                              key={num}
+                              type="button"
+                              onClick={() => setRecommendCount(num)}
+                              className={`flex-1 py-2 rounded-lg border-2 transition-all ${
+                                recommendCount === num
+                                  ? 'border-primary bg-primary/10 text-primary'
+                                  : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                              }`}
+                            >
+                              {num}道
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+
               <InitialState onStart={generateRecommendation} loading={false} />
             </motion.div>
           )}
@@ -127,12 +409,96 @@ const RecommendationPage: React.FC = () => {
                 </div>
               )}
 
-              <RecommendationDisplay
-                recommendation={currentRecommendation}
-                onReroll={handleReroll}
-                onFavorite={handleFavorite}
-                isFavorite={currentRecommendation.isFavorite}
-              />
+              {/* 保留的菜品提示 */}
+              {keptRecipes.length > 0 && (
+                <div className="bg-green-50 border border-green-200 rounded-card p-3">
+                  <p className="text-sm text-green-800">
+                    已保留 {keptRecipes.length} 道菜：{keptRecipes.map(r => r.name).join('、')}
+                  </p>
+                </div>
+              )}
+
+              {/* 推荐结果卡片 */}
+              <div className="grid gap-4">
+                {currentRecipes.map((recipe, index) => (
+                  <motion.div
+                    key={recipe.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="bg-white rounded-2xl p-4 shadow-sm"
+                  >
+                    <div className="flex gap-4">
+                      <img
+                        src={recipe.image}
+                        alt={recipe.name}
+                        className="w-24 h-24 rounded-xl object-cover"
+                      />
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-800">{recipe.name}</h3>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {recipe.time}分钟 · {recipe.difficulty === 'easy' ? '简单' : recipe.difficulty === 'medium' ? '中等' : '困难'}
+                        </p>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {recipe.tags.slice(0, 2).map((tag) => (
+                            <span key={tag} className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* 操作按钮 */}
+                    <div className="flex gap-2 mt-3">
+                      {keptRecipes.find(r => r.id === recipe.id) ? (
+                        <button
+                          onClick={() => handleUnkeepRecipe(recipe)}
+                          className="flex-1 flex items-center justify-center gap-1 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          <Check size={16} />
+                          已保留
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleKeepRecipe(recipe)}
+                          className="flex-1 flex items-center justify-center gap-1 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-green-100 hover:text-green-700 transition-colors"
+                        >
+                          <Check size={16} />
+                          保留
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleRerollSingle(recipe)}
+                        className="flex-1 flex items-center justify-center gap-1 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-orange-100 hover:text-orange-700 transition-colors"
+                      >
+                        <RefreshCw size={16} />
+                        换一道
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* 整体操作 */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={handleReroll}
+                  className="flex-1 py-3 bg-primary text-white rounded-xl font-medium shadow-lg hover:shadow-xl active:scale-[0.98] transition-all"
+                >
+                  重新推荐全部
+                </button>
+                <button
+                  onClick={handleFavorite}
+                  className={`px-4 py-3 rounded-xl font-medium shadow-lg transition-all ${
+                    currentRecommendation.isFavorite
+                      ? 'bg-red-500 text-white'
+                      : 'bg-white text-gray-700'
+                  }`}
+                >
+                  {currentRecommendation.isFavorite ? '已收藏' : '收藏'}
+                </button>
+              </div>
 
               <div className="pt-4">
                 <button
@@ -158,6 +524,7 @@ const RecommendationPage: React.FC = () => {
                         >
                           <div className="flex-1 cursor-pointer" onClick={() => {
                             setCurrentRecommendation(rec);
+                            setCurrentRecipes(rec.recipes);
                             setState('result');
                           }}>
                             <p className="text-sm text-gray-500">{formatDate(rec.date)}</p>
