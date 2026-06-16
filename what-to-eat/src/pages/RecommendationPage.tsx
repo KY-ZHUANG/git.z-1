@@ -7,6 +7,66 @@ import { formatDate } from '../utils/format';
 import { loadRecipes, saveRecommendation, getRecommendationHistory, deleteRecommendation } from '../utils/storage';
 import { LOADING_MESSAGES } from '../utils/constants';
 
+// 食材同义词映射表
+const INGREDIENT_SYNONYMS: Record<string, string[]> = {
+  // 肉类
+  '鸡肉': ['鸡胸肉', '鸡腿肉', '鸡翅', '鸡肉', '鸡丁', '鸡块', '鸡'],
+  '猪肉': ['五花肉', '瘦肉', '猪肉', '里脊', '排骨', '肉末', '肉丝', '肉片', '猪蹄', '猪肝'],
+  '牛肉': ['牛肉', '牛腩', '牛柳', '肥牛', '牛肉片', '牛肉丝', '牛肉末'],
+  '羊肉': ['羊肉', '羊排', '羊腿', '肥羊'],
+  '鱼肉': ['鱼肉', '鲈鱼', '鳕鱼', '三文鱼', '鲫鱼', '草鱼', '鲤鱼', '带鱼', '黄鱼', '鱼'],
+  '虾': ['虾', '虾仁', '基围虾', '大虾', '龙虾'],
+  '蛋': ['鸡蛋', '鸭蛋', '蛋', '蛋白', '蛋黄'],
+  
+  // 蔬菜类
+  '青菜': ['青菜', '小白菜', '油菜', '生菜', '菠菜', '油麦菜', '空心菜'],
+  '白菜': ['白菜', '大白菜', '小白菜'],
+  '萝卜': ['萝卜', '白萝卜', '红萝卜', '胡萝卜'],
+  '豆': ['豆腐', '豆干', '豆皮', '豆芽', '豆角', '毛豆', '黄豆', '黑豆'],
+  '菇': ['香菇', '蘑菇', '金针菇', '平菇', '杏鲍菇', '木耳', '银耳'],
+  '瓜': ['黄瓜', '冬瓜', '南瓜', '丝瓜', '苦瓜', '西瓜', '哈密瓜'],
+  
+  // 主食类
+  '米': ['大米', '小米', '糯米', '米饭', '米粉'],
+  '面': ['面条', '面粉', '面皮', '面'],
+  
+  // 调料类
+  '椒': ['辣椒', '青椒', '红椒', '花椒', '胡椒', '尖椒', '彩椒'],
+  '葱': ['葱', '大葱', '小葱', '洋葱', '葱花'],
+  '姜': ['姜', '生姜', '姜片', '姜末'],
+  '蒜': ['蒜', '大蒜', '蒜末', '蒜苗'],
+};
+
+// 检查两个食材是否匹配（支持同义词）
+function isIngredientMatch(ingredientName: string, searchTerm: string): boolean {
+  const ingLower = ingredientName.toLowerCase();
+  const searchLower = searchTerm.toLowerCase();
+  
+  // 直接包含匹配
+  if (ingLower.includes(searchLower) || searchLower.includes(ingLower)) {
+    return true;
+  }
+  
+  // 同义词匹配
+  for (const [key, synonyms] of Object.entries(INGREDIENT_SYNONYMS)) {
+    // 如果搜索词是同义词组的关键字
+    if (searchLower.includes(key.toLowerCase()) || key.toLowerCase().includes(searchLower)) {
+      // 检查食材是否在同义词列表中
+      if (synonyms.some(s => ingLower.includes(s.toLowerCase()))) {
+        return true;
+      }
+    }
+    // 如果食材在同义词列表中，搜索词是另一个同义词
+    if (synonyms.some(s => ingLower.includes(s.toLowerCase()))) {
+      if (synonyms.some(s => searchLower.includes(s.toLowerCase()) || s.toLowerCase().includes(searchLower))) {
+        return true;
+      }
+    }
+  }
+  
+  return false;
+}
+
 const RecommendationPage: React.FC = () => {
   const [state, setState] = useState<'initial' | 'loading' | 'result'>('initial');
   const [currentRecommendation, setCurrentRecommendation] = useState<Recommendation | null>(null);
@@ -73,14 +133,11 @@ const RecommendationPage: React.FC = () => {
     });
   }, [excludedFoods]);
 
-  // 计算菜谱与已有食材的匹配数量
+  // 计算菜谱与已有食材的匹配数量（支持同义词）
   const getMatchCount = useCallback((recipe: Recipe): number => {
     if (availableIngredients.length === 0) return 0;
     return recipe.ingredients.filter(ing => 
-      availableIngredients.some(avail => 
-        ing.name.toLowerCase().includes(avail.toLowerCase()) ||
-        avail.toLowerCase().includes(ing.name.toLowerCase())
-      )
+      availableIngredients.some(avail => isIngredientMatch(ing.name, avail))
     ).length;
   }, [availableIngredients]);
 
