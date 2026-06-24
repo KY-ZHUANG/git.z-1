@@ -28,12 +28,12 @@ export const BottomTab: React.FC = () => {
               }`}
             >
               {isActive && (
-                <motion.div
-                  layoutId="activeTabBg"
-                  className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-primary/10"
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                />
-              )}
+                        <motion.div
+                          layoutId="activeTabBg"
+                          className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-emerald-500/10"
+                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                        />
+                      )}
               <motion.div
                 className="relative z-10 flex flex-col items-center"
                 animate={{

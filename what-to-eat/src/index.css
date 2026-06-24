@@ -4,10 +4,10 @@
 
 @layer base {
   :root {
-    --color-primary: #F97316;
-    --color-primary-light: #FB923C;
-    --color-primary-dark: #EA580C;
-    --color-background: #FFFBF5;
+    --color-primary: #10B981;
+    --color-primary-light: #34D399;
+    --color-primary-dark: #059669;
+    --color-background: #F0FDF4;
     --color-surface: #FFFFFF;
     --color-text-primary: #1F2937;
     --color-text-secondary: #6B7280;
@@ -39,6 +39,10 @@
 
   ::selection {
     @apply bg-primary/20 text-primary-dark;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary/50 ring-offset-2;
   }
 
   ::-webkit-scrollbar {
@@ -78,17 +82,17 @@
   }
 
   .gradient-primary {
-    background: linear-gradient(135deg, #F97316 0%, #FB923C 50%, #FDBA74 100%);
+    background: linear-gradient(135deg, #10B981 0%, #34D399 50%, #6EE7B7 100%);
     background-size: 200% 200%;
     animation: gradient 3s ease infinite;
   }
 
   .gradient-warm {
-    background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 50%, #FFFBEB 100%);
+    background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 50%, #F0FDF4 100%);
   }
 
   .text-gradient {
-    background: linear-gradient(135deg, #F97316 0%, #FB923C 100%);
+    background: linear-gradient(135deg, #10B981 0%, #34D399 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -338,10 +342,10 @@
 
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
   }
   50% {
-    box-shadow: 0 0 40px rgba(249, 115, 22, 0.5);
+    box-shadow: 0 0 40px rgba(16, 185, 129, 0.5);
   }
 }
 

@@ -487,7 +487,7 @@ const RecommendationPage: React.FC = () => {
     <div className="min-h-screen pb-20 bg-background">
       {/* 头部区域 */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary-light" />
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-500" />
         <div className="absolute -top-24 -right-16 w-56 h-56 rounded-full bg-white/10 blur-3xl" />
         <div className="absolute -bottom-8 -left-12 w-40 h-40 rounded-full bg-white/5 blur-2xl" />
         <div className="absolute top-16 right-8 w-16 h-16 rounded-full bg-white/10 blur-xl" />
@@ -553,7 +553,7 @@ const RecommendationPage: React.FC = () => {
                   className="flex items-center justify-between w-full text-left"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/10 to-primary-light/20 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/10 to-teal-500/20 flex items-center justify-center">
                       <Settings2 size={20} className="text-primary" />
                     </div>
                     <div>
@@ -694,7 +694,7 @@ const RecommendationPage: React.FC = () => {
                               whileTap={{ scale: 0.95 }}
                               className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${
                                 recommendCount === num
-                                  ? 'bg-gradient-to-r from-primary to-primary-light text-white shadow-glow'
+                                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-glow'
                                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                               }`}
                             >
