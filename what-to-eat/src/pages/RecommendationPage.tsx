@@ -484,15 +484,54 @@ const RecommendationPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen pb-20 bg-gradient-to-b from-orange-50 to-background">
-      <div className="bg-gradient-to-r from-primary to-primary-light text-white px-4 pt-12 pb-8">
-        <h1 className="text-2xl font-bold mb-1">今日推荐</h1>
-        <p className="text-white/80 text-sm">
-          {state === 'result' ? '为你精心搭配的三餐' : '点击按钮，帮你决定今天吃什么'}
-        </p>
+    <div className="min-h-screen pb-20 bg-background">
+      {/* 头部区域 */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary-light" />
+        <div className="absolute -top-24 -right-16 w-56 h-56 rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute -bottom-8 -left-12 w-40 h-40 rounded-full bg-white/5 blur-2xl" />
+        <div className="absolute top-16 right-8 w-16 h-16 rounded-full bg-white/10 blur-xl" />
+        
+        <div className="relative px-4 pt-12 pb-24">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="flex items-center gap-2 mb-1"
+          >
+            <span className="text-2xl">✨</span>
+            <span className="text-white/70 text-sm font-medium">美食精灵</span>
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className="text-3xl font-bold text-white tracking-tight"
+          >
+            今日推荐
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="text-white/70 text-sm mt-1"
+          >
+            {state === 'result' ? '为你精心搭配的美味组合' : '点击按钮，帮你决定今天吃什么'}
+          </motion.p>
+        </div>
+        
+        {/* 底部弧形装饰 */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-12 text-background">
+            <path
+              d="M0 48H1440V0C1440 0 1080 48 720 48C360 48 0 0 0 0V48Z"
+              fill="currentColor"
+            />
+          </svg>
+        </div>
       </div>
 
-      <div className="px-4 -mt-4">
+      <div className="px-4 -mt-10 relative z-10">
         <AnimatePresence mode="wait">
           {state === 'initial' && (
             <motion.div
@@ -504,21 +543,38 @@ const RecommendationPage: React.FC = () => {
             >
               {/* 筛选面板 */}
               <motion.div 
-                className="bg-white rounded-2xl p-4 shadow-sm"
-                initial={{ y: 20 }}
-                animate={{ y: 0 }}
+                className="card p-5"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               >
                 <button
                   onClick={() => setShowFilters(!showFilters)}
                   className="flex items-center justify-between w-full text-left"
                 >
-                  <div className="flex items-center gap-2">
-                    <Settings2 size={20} className="text-primary" />
-                    <span className="font-semibold text-gray-800">推荐设置</span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/10 to-primary-light/20 flex items-center justify-center">
+                      <Settings2 size={20} className="text-primary" />
+                    </div>
+                    <div>
+                      <span className="font-semibold text-gray-800 block">推荐设置</span>
+                      <span className="text-xs text-gray-400">
+                        {availableIngredients.length > 0 || excludedFoods.length > 0 
+                          ? `已设置 ${availableIngredients.length + excludedFoods.length} 个条件`
+                          : '个性化你的推荐'
+                        }
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-sm text-gray-500">
-                    {showFilters ? '收起' : '展开'}
-                  </span>
+                  <motion.div
+                    animate={{ rotate: showFilters ? 180 : 0 }}
+                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center"
+                  >
+                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </motion.div>
                 </button>
 
                 <AnimatePresence>
@@ -527,126 +583,149 @@ const RecommendationPage: React.FC = () => {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      className="space-y-4 mt-4 overflow-hidden"
+                      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                      className="space-y-5 mt-5 overflow-hidden"
                     >
                       {/* 已有食材 */}
                       <div>
-                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                          <ChefHat size={16} className="text-green-500" />
-                          已有食材（可选）
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
+                          <div className="w-6 h-6 rounded-lg bg-green-100 flex items-center justify-center">
+                            <ChefHat size={14} className="text-green-600" />
+                          </div>
+                          已有食材
+                          <span className="text-xs font-normal text-gray-400">（优先推荐包含这些食材的菜）</span>
                         </label>
-                        <div className="flex gap-2 mb-2">
+                        <div className="flex gap-2 mb-3">
                           <input
                             type="text"
                             value={tempIngredient}
                             onChange={(e) => setTempIngredient(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && addAvailableIngredient()}
                             placeholder="输入食材，如：鸡蛋、番茄"
-                            className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none text-sm"
+                            className="input-field flex-1 text-sm"
                           />
-                          <button
+                          <motion.button
                             type="button"
                             onClick={addAvailableIngredient}
-                            className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                            whileTap={{ scale: 0.95 }}
+                            className="btn-primary !py-2 !px-4 flex items-center justify-center"
                           >
                             <Plus size={18} />
-                          </button>
+                          </motion.button>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {availableIngredients.map((ing) => (
-                            <span
+                            <motion.span
                               key={ing}
-                              className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs"
+                              initial={{ scale: 0.8, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              className="tag tag-success"
                             >
                               {ing}
-                              <button onClick={() => removeAvailableIngredient(ing)}>
+                              <button onClick={() => removeAvailableIngredient(ing)} className="ml-1 opacity-60 hover:opacity-100">
                                 <X size={12} />
                               </button>
-                            </span>
+                            </motion.span>
                           ))}
+                          {availableIngredients.length === 0 && (
+                            <span className="text-xs text-gray-400">暂未添加食材</span>
+                          )}
                         </div>
                       </div>
 
                       {/* 不想吃的食物 */}
                       <div>
-                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                          <Ban size={16} className="text-red-500" />
-                          不想吃（可选）
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
+                          <div className="w-6 h-6 rounded-lg bg-rose-100 flex items-center justify-center">
+                            <Ban size={14} className="text-rose-600" />
+                          </div>
+                          不想吃
+                          <span className="text-xs font-normal text-gray-400">（这些食材将被排除）</span>
                         </label>
-                        <div className="flex gap-2 mb-2">
+                        <div className="flex gap-2 mb-3">
                           <input
                             type="text"
                             value={tempExcluded}
                             onChange={(e) => setTempExcluded(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && addExcludedFood()}
                             placeholder="输入不想吃的菜或食材"
-                            className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none text-sm"
+                            className="input-field flex-1 text-sm"
                           />
-                          <button
+                          <motion.button
                             type="button"
                             onClick={addExcludedFood}
-                            className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                            whileTap={{ scale: 0.95 }}
+                            className="bg-rose-500 hover:bg-rose-600 text-white rounded-button !py-2 !px-4 flex items-center justify-center transition-colors"
                           >
                             <Plus size={18} />
-                          </button>
+                          </motion.button>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {excludedFoods.map((food) => (
-                            <span
+                            <motion.span
                               key={food}
-                              className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs"
+                              initial={{ scale: 0.8, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              className="tag tag-danger"
                             >
                               {food}
-                              <button onClick={() => removeExcludedFood(food)}>
+                              <button onClick={() => removeExcludedFood(food)} className="ml-1 opacity-60 hover:opacity-100">
                                 <X size={12} />
                               </button>
-                            </span>
+                            </motion.span>
                           ))}
+                          {excludedFoods.length === 0 && (
+                            <span className="text-xs text-gray-400">暂未添加排除项</span>
+                          )}
                         </div>
                       </div>
 
                       {/* 推荐数量 */}
                       <div>
-                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                          <span>推荐数量</span>
+                        <label className="text-sm font-semibold text-gray-700 mb-3 block">
+                          推荐数量
                         </label>
                         <div className="flex gap-2">
                           {[2, 3, 4, 5].map((num) => (
-                            <button
+                            <motion.button
                               key={num}
                               type="button"
                               onClick={() => setRecommendCount(num)}
-                              className={`flex-1 py-2 rounded-lg border-2 transition-all ${
+                              whileTap={{ scale: 0.95 }}
+                              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${
                                 recommendCount === num
-                                  ? 'border-primary bg-primary/10 text-primary'
-                                  : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                                  ? 'bg-gradient-to-r from-primary to-primary-light text-white shadow-glow'
+                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                               }`}
                             >
                               {num}道
-                            </button>
+                            </motion.button>
                           ))}
                         </div>
                       </div>
 
                       {/* 卡路里目标 */}
                       <div>
-                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                          <Flame size={16} className="text-orange-500" />
-                          目标卡路里（可选）
+                        <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
+                          <div className="w-6 h-6 rounded-lg bg-orange-100 flex items-center justify-center">
+                            <Flame size={14} className="text-orange-600" />
+                          </div>
+                          目标卡路里
+                          <span className="text-xs font-normal text-gray-400">（可选）</span>
                         </label>
-                        <div className="flex gap-2 mb-2">
+                        <div className="flex gap-2 mb-3">
                           <input
                             type="number"
                             value={targetCalories || ''}
                             onChange={(e) => setTargetCalories(e.target.value ? Number(e.target.value) : undefined)}
                             placeholder="如：800"
-                            className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none text-sm"
+                            className="input-field flex-1 text-sm"
                           />
-                          <span className="flex items-center text-sm text-gray-500">kcal</span>
+                          <span className="flex items-center text-sm text-gray-500 font-medium">kcal</span>
                         </div>
                         {targetCalories && (
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <span>误差范围：</span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs text-gray-500 whitespace-nowrap">误差范围</span>
                             <input
                               type="range"
                               min="50"
@@ -654,9 +733,9 @@ const RecommendationPage: React.FC = () => {
                               step="50"
                               value={calorieTolerance}
                               onChange={(e) => setCalorieTolerance(Number(e.target.value))}
-                              className="flex-1"
+                              className="flex-1 accent-primary"
                             />
-                            <span>±{calorieTolerance}</span>
+                            <span className="text-xs font-semibold text-primary whitespace-nowrap">±{calorieTolerance}</span>
                           </div>
                         )}
                       </div>
@@ -688,201 +767,324 @@ const RecommendationPage: React.FC = () => {
               className="space-y-4"
             >
               {/* 返回按钮 */}
-              <div className="flex items-center gap-2">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4 }}
+              >
                 <button
                   onClick={handleBackToInitial}
-                  className="flex items-center gap-1 px-3 py-2 bg-white border-2 border-gray-200 rounded-lg text-gray-600 hover:border-primary hover:text-primary transition-colors shadow-sm"
+                  className="flex items-center gap-2 px-4 py-2.5 card hover:shadow-card-hover transition-all"
                 >
-                  <ArrowLeft size={18} />
-                  <span className="text-sm font-medium">返回</span>
+                  <ArrowLeft size={18} className="text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">重新设置</span>
                 </button>
-              </div>
+              </motion.div>
 
-              {rerollCount >= 3 && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-card p-3 text-sm text-yellow-800 text-center">
-                  已经推荐了{rerollCount + 1}次啦，要不要换个口味试试？
-                </div>
-              )}
-
-              {/* 食材匹配提示 */}
-              {availableIngredients.length > 0 && (
-                <div className="bg-blue-50 border border-blue-200 rounded-card p-3">
-                  <p className="text-sm text-blue-800">
-                    根据食材「{availableIngredients.join('、')}」推荐
-                  </p>
-                </div>
-              )}
-
-              {/* 卡路里提示 */}
-              {targetCalories && (
-                <div className="bg-orange-50 border border-orange-200 rounded-card p-3">
-                  <p className="text-sm text-orange-800">
-                    目标卡路里：{targetCalories} kcal | 
-                    当前推荐：{getTotalCalories(currentRecipes)} kcal | 
-                    差距：{Math.abs(getTotalCalories(currentRecipes) - targetCalories)} kcal
-                  </p>
-                </div>
-              )}
-
-              {/* 保留的菜品提示 */}
-              {keptRecipes.length > 0 && (
-                <div className="bg-green-50 border border-green-200 rounded-card p-3">
-                  <p className="text-sm text-green-800">
-                    已保留 {keptRecipes.length} 道菜：{keptRecipes.map(r => r.name).join('、')}
-                  </p>
-                </div>
+              {/* 状态提示卡片 */}
+              {(rerollCount >= 3 || availableIngredients.length > 0 || targetCalories || keptRecipes.length > 0) && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.1 }}
+                  className="space-y-2"
+                >
+                  {rerollCount >= 3 && (
+                    <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200/50 rounded-2xl p-3.5">
+                      <p className="text-sm text-amber-800 font-medium">
+                        💡 已经推荐了{rerollCount + 1}次啦，要不要调整一下筛选条件试试？
+                      </p>
+                    </div>
+                  )}
+                  {availableIngredients.length > 0 && (
+                    <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200/50 rounded-2xl p-3.5">
+                      <p className="text-sm text-emerald-800">
+                        <span className="font-medium">🥗 食材匹配：</span>
+                        根据「{availableIngredients.join('、')}」优先推荐
+                      </p>
+                    </div>
+                  )}
+                  {targetCalories && (
+                    <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200/50 rounded-2xl p-3.5">
+                      <p className="text-sm text-orange-800">
+                        <span className="font-medium">🔥 卡路里目标：</span>
+                        {targetCalories} kcal · 当前 {getTotalCalories(currentRecipes)} kcal · 
+                        差距 {Math.abs(getTotalCalories(currentRecipes) - targetCalories)} kcal
+                      </p>
+                    </div>
+                  )}
+                  {keptRecipes.length > 0 && (
+                    <div className="bg-gradient-to-r from-teal-50 to-cyan-50 border border-teal-200/50 rounded-2xl p-3.5">
+                      <p className="text-sm text-teal-800">
+                        <span className="font-medium">✨ 已保留：</span>
+                        {keptRecipes.map(r => r.name).join('、')}
+                      </p>
+                    </div>
+                  )}
+                </motion.div>
               )}
 
               {/* 推荐结果卡片 */}
-              <div className="grid gap-4">
-                {currentRecipes.map((recipe, index) => (
-                  <motion.div
-                    key={recipe.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="bg-white rounded-2xl p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => navigate(`/recipe/${recipe.id}`)}
-                  >
-                    <div className="flex gap-4">
-                      <img
-                        src={recipe.image}
-                        alt={recipe.name}
-                        className="w-24 h-24 rounded-xl object-cover"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between">
-                          <h3 className="font-semibold text-gray-800">{recipe.name}</h3>
-                          <div className="flex gap-1">
-                            {recipe.calories && (
-                              <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded-full">
-                                {recipe.calories}kcal
+              <div className="space-y-4 pt-2">
+                {currentRecipes.map((recipe, index) => {
+                  const isKept = keptRecipes.find(r => r.id === recipe.id);
+                  const matchCount = getMatchCount(recipe);
+                  
+                  return (
+                    <motion.div
+                      key={recipe.id}
+                      initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ 
+                        delay: index * 0.12, 
+                        duration: 0.5,
+                        ease: [0.16, 1, 0.3, 1]
+                      }}
+                      whileHover={{ y: -2 }}
+                      className="card card-press overflow-hidden cursor-pointer group"
+                      onClick={() => navigate(`/recipe/${recipe.id}`)}
+                    >
+                      <div className="relative">
+                        <div className="flex gap-4 p-4">
+                          <div className="relative w-28 h-28 flex-shrink-0 rounded-2xl overflow-hidden">
+                            <img
+                              src={recipe.image}
+                              alt={recipe.name}
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                            
+                            {/* 分类标签 */}
+                            <div className="absolute top-2 left-2">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold backdrop-blur-sm ${
+                                recipe.category === 'meat' 
+                                  ? 'bg-rose-500/90 text-white' 
+                                  : recipe.category === 'dessert'
+                                  ? 'bg-amber-500/90 text-white'
+                                  : 'bg-emerald-500/90 text-white'
+                              }`}>
+                                {recipe.category === 'meat' ? '荤' : recipe.category === 'dessert' ? '甜' : '素'}
                               </span>
-                            )}
-                            {availableIngredients.length > 0 && getMatchCount(recipe) > 0 && (
-                              <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
-                                匹配{getMatchCount(recipe)}种食材
-                              </span>
-                            )}
+                            </div>
+                          </div>
+                          
+                          <div className="flex-1 min-w-0 flex flex-col justify-between">
+                            <div>
+                              <h3 className="font-bold text-gray-800 text-lg mb-1 truncate">
+                                {recipe.name}
+                              </h3>
+                              <div className="flex items-center gap-2 text-sm text-gray-500">
+                                <span className="flex items-center gap-1">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  {recipe.time}分钟
+                                </span>
+                                <span className="w-1 h-1 rounded-full bg-gray-300" />
+                                <span>{recipe.difficulty === 'easy' ? '简单' : recipe.difficulty === 'medium' ? '中等' : '困难'}</span>
+                              </div>
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-1.5">
+                              {recipe.calories && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 text-xs font-medium">
+                                  🔥 {recipe.calories} kcal
+                                </span>
+                              )}
+                              {availableIngredients.length > 0 && matchCount > 0 && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-xs font-medium">
+                                  ✓ 匹配{matchCount}种
+                                </span>
+                              )}
+                              {recipe.tags.slice(0, 1).map((tag) => (
+                                <span key={tag} className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         </div>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {recipe.time}分钟 · {recipe.difficulty === 'easy' ? '简单' : recipe.difficulty === 'medium' ? '中等' : '困难'}
-                        </p>
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {recipe.tags.slice(0, 2).map((tag) => (
-                            <span key={tag} className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
-                              {tag}
-                            </span>
-                          ))}
+                        
+                        {/* 操作按钮 */}
+                        <div 
+                          className="flex border-t border-gray-100" 
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <motion.button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              isKept ? handleUnkeepRecipe(recipe) : handleKeepRecipe(recipe);
+                            }}
+                            whileTap={{ scale: 0.97 }}
+                            className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-semibold transition-all ${
+                              isKept
+                                ? 'text-emerald-600 bg-emerald-50'
+                                : 'text-gray-500 hover:text-emerald-600 hover:bg-emerald-50/50'
+                            }`}
+                          >
+                            <Check size={16} strokeWidth={isKept ? 2.5 : 2} />
+                            {isKept ? '已保留' : '保留'}
+                          </motion.button>
+                          <div className="w-px bg-gray-100" />
+                          <motion.button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRerollSingle(recipe);
+                            }}
+                            whileTap={{ scale: 0.97 }}
+                            className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-semibold text-gray-500 hover:text-primary hover:bg-primary/5 transition-all"
+                          >
+                            <RefreshCw size={16} />
+                            换一道
+                          </motion.button>
                         </div>
                       </div>
-                    </div>
-                    
-                    {/* 操作按钮 */}
-                    <div className="flex gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
-                      {keptRecipes.find(r => r.id === recipe.id) ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleUnkeepRecipe(recipe);
-                          }}
-                          className="flex-1 flex items-center justify-center gap-1 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium transition-colors"
-                        >
-                          <Check size={16} />
-                          已保留
-                        </button>
-                      ) : (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleKeepRecipe(recipe);
-                          }}
-                          className="flex-1 flex items-center justify-center gap-1 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-green-100 hover:text-green-700 transition-colors"
-                        >
-                          <Check size={16} />
-                          保留
-                        </button>
-                      )}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRerollSingle(recipe);
-                        }}
-                        className="flex-1 flex items-center justify-center gap-1 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-orange-100 hover:text-orange-700 transition-colors"
-                      >
-                        <RefreshCw size={16} />
-                        换一道
-                      </button>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  );
+                })}
               </div>
+
+              {/* 营养概览 */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: currentRecipes.length * 0.12 + 0.1 }}
+                className="card p-5 bg-gradient-to-br from-warm-50 to-primary/5"
+              >
+                <div className="text-center">
+                  <p className="text-sm text-gray-500 mb-2">营养搭配</p>
+                  <p className="text-gradient font-bold text-lg">
+                    荤素均衡 · 营养丰富 ✨
+                  </p>
+                  <div className="flex justify-center gap-6 mt-4">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-gray-800">
+                        {currentRecipes.reduce((sum, r) => sum + r.time, 0)}
+                      </p>
+                      <p className="text-xs text-gray-500">分钟总耗时</p>
+                    </div>
+                    <div className="w-px bg-gray-200" />
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-primary">
+                        {getTotalCalories(currentRecipes)}
+                      </p>
+                      <p className="text-xs text-gray-500">千卡热量</p>
+                    </div>
+                    <div className="w-px bg-gray-200" />
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-emerald-500">
+                        {currentRecipes.filter(r => r.category === 'vegetable').length}
+                      </p>
+                      <p className="text-xs text-gray-500">道素菜</p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
 
               {/* 整体操作 */}
-              <div className="flex gap-3 pt-4">
-                <button
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: currentRecipes.length * 0.12 + 0.2 }}
+                className="flex gap-3 pt-2"
+              >
+                <motion.button
                   onClick={handleReroll}
-                  className="flex-1 py-3 bg-primary text-white rounded-xl font-medium shadow-lg hover:shadow-xl active:scale-[0.98] transition-all"
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex-1 btn-primary flex items-center justify-center gap-2"
                 >
-                  重新推荐全部
-                </button>
-                <button
+                  <RefreshCw size={18} />
+                  重新推荐
+                </motion.button>
+                <motion.button
                   onClick={handleFavorite}
-                  className={`px-4 py-3 rounded-xl font-medium shadow-lg transition-all ${
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`w-14 h-[52px] rounded-button flex items-center justify-center transition-all ${
                     currentRecommendation.isFavorite
-                      ? 'bg-red-500 text-white'
-                      : 'bg-white text-gray-700'
+                      ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/30'
+                      : 'bg-white text-gray-400 border border-gray-200 hover:text-rose-500 hover:border-rose-200'
                   }`}
                 >
-                  {currentRecommendation.isFavorite ? '已收藏' : '收藏'}
-                </button>
-              </div>
+                  <svg 
+                    className="w-5 h-5" 
+                    fill={currentRecommendation.isFavorite ? 'currentColor' : 'none'} 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </motion.button>
+              </motion.div>
 
-              <div className="pt-4">
+              {/* 历史记录 */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.8 }}
+                className="pt-4 pb-6"
+              >
                 <button
                   onClick={() => setShowHistory(!showHistory)}
-                  className="w-full py-2 text-center text-sm text-gray-500 hover:text-primary transition-colors"
+                  className="w-full py-3 text-center text-sm text-gray-500 hover:text-primary transition-colors flex items-center justify-center gap-1"
                 >
-                  {showHistory ? '收起历史记录' : '查看历史推荐'}
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {showHistory ? '收起历史推荐' : '查看历史推荐'}
                 </button>
 
-                {showHistory && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    className="space-y-3 mt-4"
-                  >
-                    {history.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500">暂无历史记录</div>
-                    ) : (
-                      history.slice(0, 5).map((rec) => (
-                        <div
-                          key={rec.id}
-                          className="bg-white rounded-card p-3 card-shadow flex items-center gap-3"
-                        >
-                          <div className="flex-1 cursor-pointer" onClick={() => {
-                            setCurrentRecommendation(rec);
-                            setCurrentRecipes(rec.recipes);
-                            setState('result');
-                          }}>
-                            <p className="text-sm text-gray-500">{formatDate(rec.date)}</p>
-                            <p className="text-gray-800 font-medium truncate">
-                              {rec.recipes.map((r: Recipe) => r.name).join(' + ')}
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => handleDeleteHistory(rec.id)}
-                            className="text-gray-400 hover:text-red-500"
-                          >
-                            删除
-                          </button>
+                <AnimatePresence>
+                  {showHistory && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="space-y-2.5 mt-3 overflow-hidden"
+                    >
+                      {history.length === 0 ? (
+                        <div className="text-center py-8 text-gray-400 text-sm">
+                          暂无历史推荐记录
                         </div>
-                      ))
-                    )}
-                  </motion.div>
-                )}
-              </div>
+                      ) : (
+                        history.slice(0, 5).map((rec, idx) => (
+                          <motion.div
+                            key={rec.id}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            className="card p-3.5 flex items-center gap-3 hover:shadow-card-hover transition-shadow"
+                          >
+                            <div 
+                              className="flex-1 cursor-pointer min-w-0" 
+                              onClick={() => {
+                                setCurrentRecommendation(rec);
+                                setCurrentRecipes(rec.recipes);
+                                setState('result');
+                              }}
+                            >
+                              <p className="text-xs text-gray-400 mb-1">{formatDate(rec.date)}</p>
+                              <p className="text-gray-700 font-medium truncate text-sm">
+                                {rec.recipes.map((r: Recipe) => r.name).join(' + ')}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => handleDeleteHistory(rec.id)}
+                              className="text-gray-300 hover:text-red-500 p-2 -mr-2 transition-colors"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </motion.div>
+                        ))
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
