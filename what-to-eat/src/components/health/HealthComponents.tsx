@@ -4,6 +4,7 @@ import type { HealthyFood, NutritionTip, WeeklyPlan } from '../../types';
 import { FOOD_CATEGORIES } from '../../utils/constants';
 import { GIBadge } from '../common/Badges';
 import { SearchIcon } from '../common/Icons';
+import { getFoodImage } from '../../utils/image';
 
 interface NutritionCarouselProps {
   tips: NutritionTip[];
@@ -123,7 +124,7 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, onFavorite, isFavorite
     >
       <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-emerald-50 flex-shrink-0">
         <img
-          src={food.image}
+          src={getFoodImage(food.id, food.name)}
           alt={food.name}
           className="w-full h-full object-cover"
         />

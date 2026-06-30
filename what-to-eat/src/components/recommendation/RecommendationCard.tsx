@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import type { Recipe } from '../../types';
 import { DiceIcon, HeartIcon, RefreshIcon } from '../common/Icons';
 import { formatTime } from '../../utils/format';
+import { getRecipeImage } from '../../utils/image';
 
 interface RecommendationCardProps {
   recipe: Recipe;
@@ -28,7 +29,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
       <Link to={`/recipe/${recipe.id}`} className="block">
         <div className="relative aspect-square overflow-hidden">
           <img
-            src={recipe.image}
+            src={getRecipeImage(recipe.id, recipe.name)}
             alt={recipe.name}
             className="w-full h-full object-cover"
           />

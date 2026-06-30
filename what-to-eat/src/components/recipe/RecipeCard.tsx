@@ -3,6 +3,7 @@ import { DifficultyBadge } from '../common/Badges';
 import { Heart, Clock } from 'lucide-react';
 import { formatTime } from '../../utils/format';
 import { isFavorite, toggleFavorite as toggleFavoriteStorage } from '../../utils/storage';
+import { getRecipeImage } from '../../utils/image';
 import { Link } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
@@ -80,7 +81,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({
           
           {/* 图片 */}
           <img
-            src={recipe.image}
+            src={getRecipeImage(recipe.id, recipe.name)}
             alt={recipe.name}
             className={`w-full h-full object-cover transition-all duration-500 ${
               imgLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'

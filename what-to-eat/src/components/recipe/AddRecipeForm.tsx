@@ -95,11 +95,12 @@ const AddRecipeForm: React.FC = () => {
 
     setIsSubmitting(true);
 
+    const newId = generateId();
     const newRecipe: Recipe = {
-      id: generateId(),
+      id: newId,
       name: name.trim(),
       category,
-      image: image.trim() || getRecipeImage(name.trim(), category),
+      image: image.trim() || getRecipeImage(newId, name.trim()),
       ingredients: validIngredients,
       steps: validSteps,
       time,

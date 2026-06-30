@@ -1,193 +1,110 @@
-// 使用 picsum.photos 作为可靠的占位图片服务
-// 根据菜品名称生成固定的种子，确保同一菜品始终显示相同图片
-function getPicsumUrl(seed: string, width: number = 400, height: number = 300): string {
-  // 使用种子生成稳定的图片URL
-  const hash = seed.split('').reduce((acc, char) => {
-    return char.charCodeAt(0) + ((acc << 5) - acc);
-  }, 0);
-  const id = Math.abs(hash) % 1000;
-  return `https://picsum.photos/seed/${seed}${id}/${width}/${height}`;
-}
-
-// 菜品图片关键词映射 - 使用更具体的食物相关关键词
-const DISH_IMAGE_KEYWORDS: Record<string, string> = {
-  // 荤菜 - 使用肉类相关关键词
-  '红烧肉': 'pork-braised',
-  '糖醋排骨': 'pork-ribs',
-  '可乐鸡翅': 'chicken-wings',
-  '番茄炒蛋': 'tomato-egg',
-  '鱼香肉丝': 'shredded-pork',
-  '宫保鸡丁': 'kung-pao-chicken',
-  '清蒸鲈鱼': 'steamed-fish',
-  '黑椒牛柳': 'beef-stirfry',
-  '蒜蓉粉丝虾': 'shrimp-garlic',
-  '回锅肉': 'twice-cooked-pork',
-  '啤酒鸭': 'duck-beer',
-  '土豆炖牛腩': 'beef-stew',
-  
-  // 素菜 - 使用蔬菜相关关键词
-  '地三鲜': 'vegetable-stirfry',
-  '麻婆豆腐': 'mapo-tofu',
-  '蒜蓉西兰花': 'broccoli-garlic',
-  '干煸四季豆': 'green-beans',
-  '凉拌黄瓜': 'cucumber-salad',
-  '醋溜白菜': 'cabbage-sour',
-  '红烧茄子': 'eggplant-braised',
-  '干锅花菜': 'cauliflower-drypot',
-  '清炒时蔬': 'vegetable-stirfry',
-  '香菇油菜': 'mushroom-greens',
-  '凉拌木耳': 'wood-ear-salad',
-  
-  // 甜品 - 使用甜点相关关键词
-  '蛋挞': 'egg-tart',
-  '芒果班戟': 'mango-pancake',
-  '红豆沙': 'red-bean-soup',
-  '双皮奶': 'milk-pudding',
-  '提拉米苏': 'tiramisu-cake',
-  '杨枝甘露': 'mango-dessert',
+const DISH_IMAGE_PROMPTS: Record<string, string> = {
+  '红烧肉': '中国家常菜红烧肉，色泽红亮诱人，肥而不腻的五花肉块，浓油赤酱，盛放在白色瓷盘中，美食摄影，高清，食欲感',
+  '糖醋排骨': '中国家常菜糖醋排骨，色泽红亮，外酥里嫩的排骨，裹着酸甜酱汁，撒上白芝麻，盛放在白色盘子中，美食摄影，高清',
+  '可乐鸡翅': '中国家常菜可乐鸡翅，色泽金黄红亮，鸡翅裹着浓稠的可乐酱汁，盛放在白色盘中，美食摄影，高清，食欲感',
+  '番茄炒蛋': '中国家常菜番茄炒蛋，红黄相间，鲜嫩的鸡蛋块与多汁的番茄块混合，撒上葱花，盛放在白色瓷盘中，美食摄影，高清',
+  '鱼香肉丝': '中国川菜鱼香肉丝，色泽红亮，猪肉丝与木耳丝、胡萝卜丝翻炒，鱼香味浓郁，盛放在白色盘子中，美食摄影，高清',
+  '宫保鸡丁': '中国川菜宫保鸡丁，鸡肉丁与花生米、干辣椒、葱段炒制，色泽红亮，麻辣鲜香，盛放在白色瓷盘中，美食摄影，高清',
+  '清蒸鲈鱼': '中国家常菜清蒸鲈鱼，整条鲈鱼，鱼肉洁白鲜嫩，淋上蒸鱼豉油，撒上葱丝姜丝，淋上热油，盛放在白色鱼盘中，美食摄影，高清',
+  '黑椒牛柳': '中国家常菜黑椒牛柳，黑胡椒牛肉条，色泽深褐，搭配青椒洋葱，黑椒香味浓郁，盛放在白色盘子中，美食摄影，高清',
+  '蒜蓉粉丝虾': '中国家常菜蒜蓉粉丝虾，鲜虾开背，铺上蒜蓉粉丝，蒸制而成，蒜香浓郁，盛放在白色盘中，美食摄影，高清',
+  '回锅肉': '中国川菜回锅肉，五花肉片与青椒、蒜苗炒制，色泽红亮，肥而不腻，盛放在白色瓷盘中，美食摄影，高清',
+  '啤酒鸭': '中国家常菜啤酒鸭，鸭肉块用啤酒烧制，色泽红亮，肉质鲜嫩，盛放在白色砂锅中，美食摄影，高清，食欲感',
+  '土豆炖牛腩': '中国家常菜土豆炖牛腩，牛腩块与土豆块炖煮，色泽红亮，肉质软烂，盛放在白色砂锅中，美食摄影，高清',
+  '地三鲜': '中国东北菜地三鲜，茄子块、土豆块、青椒片炒制，色泽鲜亮，油亮诱人，盛放在白色瓷盘中，美食摄影，高清',
+  '麻婆豆腐': '中国川菜麻婆豆腐，嫩豆腐块，麻辣鲜香，色泽红亮，撒上花椒粉和葱花，盛放在白色碗中，美食摄影，高清',
+  '蒜蓉西兰花': '中国家常菜蒜蓉西兰花，翠绿的西兰花，配上蒜蓉，清清爽爽，盛放在白色瓷盘中，美食摄影，高清，健康美食',
+  '干煸四季豆': '中国川菜干煸四季豆，四季豆干香，配以肉末和干辣椒，色泽翠绿带焦黄，盛放在白色盘子中，美食摄影，高清',
+  '凉拌黄瓜': '中国家常菜凉拌黄瓜，清脆的黄瓜片，配以蒜末、醋、辣椒油，清爽开胃，盛放在白色小碗中，美食摄影，高清',
+  '醋溜白菜': '中国家常菜醋溜白菜，白菜片炒制，酸甜可口，色泽鲜亮，盛放在白色瓷盘中，美食摄影，高清',
+  '红烧茄子': '中国家常菜红烧茄子，茄子块红烧，色泽红亮，软嫩入味，撒上葱花，盛放在白色瓷盘中，美食摄影，高清',
+  '干锅花菜': '中国家常菜干锅花菜，花菜与五花肉片、辣椒炒制，干香入味，盛放在黑色干锅中，美食摄影，高清',
+  '清炒时蔬': '中国家常菜清炒时蔬，新鲜绿叶蔬菜炒制，色泽翠绿，清淡健康，撒上蒜末，盛放在白色瓷盘中，美食摄影，高清',
+  '香菇油菜': '中国家常菜香菇油菜，香菇与小油菜炒制，色泽翠绿与棕褐相间，清爽健康，盛放在白色瓷盘中，美食摄影，高清',
+  '凉拌木耳': '中国家常菜凉拌木耳，黑色的木耳，配以香菜、辣椒、醋，清爽开胃，盛放在白色小碗中，美食摄影，高清',
+  '蛋挞': '葡式蛋挞，金黄色的酥皮，嫩滑的蛋奶馅，表面有焦糖斑点，放在锡纸杯托中，美食摄影，高清，甜点',
+  '芒果班戟': '港式甜点芒果班戟，黄色的班戟皮，包裹着奶油和新鲜芒果块，放在白色盘子中，美食摄影，高清，甜点',
+  '红豆沙': '中式甜点红豆沙，细腻的红豆汤，深红色，盛放在白色小碗中，甜糯可口，美食摄影，高清，甜点',
+  '双皮奶': '广式甜点双皮奶，洁白嫩滑的双皮奶，表面平滑，盛放在白色小碗中，奶香浓郁，美食摄影，高清，甜点',
+  '提拉米苏': '意式甜点提拉米苏，层层叠叠的咖啡蛋糕和马斯卡彭奶油，表面撒可可粉，放在白色盘子中，美食摄影，高清',
+  '杨枝甘露': '港式甜点杨枝甘露，芒果西米露，金黄色的芒果泥，配有西柚粒和西米，盛放在透明玻璃碗中，美食摄影，高清',
 };
 
-const FOOD_IMAGES: Record<string, string[]> = {
-  // 健康食材
-  '燕麦': [getPicsumUrl('oats')],
-  '荞麦': [getPicsumUrl('buckwheat')],
-  '糙米': [getPicsumUrl('brownrice')],
-  '黑米': [getPicsumUrl('blackrice')],
-  '藜麦': [getPicsumUrl('quinoa')],
-  '红薯': [getPicsumUrl('sweetpotato')],
-  '山药': [getPicsumUrl('yam')],
-  '玉米': [getPicsumUrl('corn')],
-  '全麦面包': [getPicsumUrl('bread')],
-  '薏米': [getPicsumUrl('barley')],
-  '鸡胸肉': [getPicsumUrl('chicken')],
-  '三文鱼': [getPicsumUrl('salmon')],
-  '鳕鱼': [getPicsumUrl('cod')],
-  '豆腐': [getPicsumUrl('tofu')],
-  '鸡蛋': [getPicsumUrl('egg')],
-  '虾仁': [getPicsumUrl('shrimp')],
-  '瘦牛肉': [getPicsumUrl('beef')],
-  '牛奶': [getPicsumUrl('milk')],
-  '黄豆': [getPicsumUrl('soybean')],
-  '黑豆': [getPicsumUrl('blackbean')],
-  '西兰花': [getPicsumUrl('broccoli')],
-  '菠菜': [getPicsumUrl('spinach')],
-  '芹菜': [getPicsumUrl('celery')],
-  '苦瓜': [getPicsumUrl('bittermelon')],
-  '冬瓜': [getPicsumUrl('wintermelon')],
-  '番茄': [getPicsumUrl('tomato')],
-  '黄瓜': [getPicsumUrl('cucumber')],
-  '木耳': [getPicsumUrl('fungus')],
-  '香菇': [getPicsumUrl('mushroom')],
-  '海带': [getPicsumUrl('kelp')],
-  '紫菜': [getPicsumUrl('seaweed')],
-  '洋葱': [getPicsumUrl('onion')],
-  '草莓': [getPicsumUrl('strawberry')],
-  '蓝莓': [getPicsumUrl('blueberry')],
-  '柚子': [getPicsumUrl('pomelo')],
-  '苹果': [getPicsumUrl('apple')],
-  '梨': [getPicsumUrl('pear')],
-  '猕猴桃': [getPicsumUrl('kiwi')],
-  '圣女果': [getPicsumUrl('cherrytomato')],
-  '樱桃': [getPicsumUrl('cherry')],
-  '坚果': [getPicsumUrl('nuts')],
-  '橄榄油': [getPicsumUrl('oliveoil')],
-  '醋': [getPicsumUrl('vinegar')],
-  '肉桂': [getPicsumUrl('cinnamon')],
-  
-  // 中式菜品 - 荤菜
-  '红烧肉': [getPicsumUrl('hongshaorou')],
-  '糖醋排骨': [getPicsumUrl('tangcupaigu')],
-  '可乐鸡翅': [getPicsumUrl('kelaojichi')],
-  '番茄炒蛋': [getPicsumUrl('fanqiechaodan')],
-  '鱼香肉丝': [getPicsumUrl('yuxiangrousi')],
-  '宫保鸡丁': [getPicsumUrl('gongbaojiding')],
-  '清蒸鲈鱼': [getPicsumUrl('qingzhengluyu')],
-  '黑椒牛柳': [getPicsumUrl('heijiaoniuliu')],
-  '蒜蓉粉丝虾': [getPicsumUrl('suanrongfengsixia')],
-  '回锅肉': [getPicsumUrl('huiguorou')],
-  '啤酒鸭': [getPicsumUrl('pijiuya')],
-  '土豆炖牛腩': [getPicsumUrl('tudoudunniunan')],
-  
-  // 中式菜品 - 素菜
-  '地三鲜': [getPicsumUrl('disanxian')],
-  '麻婆豆腐': [getPicsumUrl('mapodoufu')],
-  '蒜蓉西兰花': [getPicsumUrl('suanrongxilanhua')],
-  '干煸四季豆': [getPicsumUrl('ganbiansijidou')],
-  '凉拌黄瓜': [getPicsumUrl('liangbanhuanggua')],
-  '醋溜白菜': [getPicsumUrl('culiubaicai')],
-  '红烧茄子': [getPicsumUrl('hongshaoqiezi')],
-  '干锅花菜': [getPicsumUrl('ganguohuacai')],
-  '清炒时蔬': [getPicsumUrl('qingchaoshishu')],
-  '香菇油菜': [getPicsumUrl('xiangguyoucai')],
-  '凉拌木耳': [getPicsumUrl('liangbanmuer')],
-  
-  // 中式菜品 - 甜品
-  '蛋挞': [getPicsumUrl('danta')],
-  '芒果班戟': [getPicsumUrl('mangguobanji')],
-  '红豆沙': [getPicsumUrl('hongdousha')],
-  '双皮奶': [getPicsumUrl('shuangpinai')],
-  '提拉米苏': [getPicsumUrl('tiramisu')],
-  '杨枝甘露': [getPicsumUrl('yangzhiganlu')],
+const HEALTHY_FOOD_PROMPTS: Record<string, string> = {
+  '燕麦': '一碗燕麦粥，金黄色的燕麦片，健康早餐，放在木质桌面上，美食摄影，高清，健康食品',
+  '荞麦': '荞麦米，健康的全谷物，放在碗中，健康食品，美食摄影，高清',
+  '糙米': '一碗糙米饭，健康的全谷物米饭，棕黄色，放在碗中，健康食品，美食摄影，高清',
+  '黑米': '黑米粥，紫黑色的健康谷物，放在碗中，健康食品，美食摄影，高清',
+  '藜麦': '藜麦饭，健康的超级食物，放在碗中，搭配蔬菜，健康食品，美食摄影，高清',
+  '红薯': '烤红薯，橙红色的番薯，香甜软糯，放在木质桌面上，健康食品，美食摄影，高清',
+  '山药': '新鲜的山药，切成片，白色的肉质，健康食材，放在木质案板上，美食摄影，高清',
+  '玉米': '新鲜的甜玉米，黄色的玉米棒，放在木质桌面上，健康食品，美食摄影，高清',
+  '全麦面包': '全麦面包片，健康的全谷物面包，放在木质案板上，健康早餐，美食摄影，高清',
+  '薏米': '薏米仁，健康的谷物，放在碗中，健康食材，美食摄影，高清',
+  '鸡胸肉': '煎鸡胸肉，健康的瘦肉蛋白，金黄色的外皮，放在白色盘子中，健康食品，美食摄影，高清',
+  '三文鱼': '新鲜的三文鱼片，橙红色的鱼肉，白色纹理，放在冰块上，健康食品，美食摄影，高清',
+  '鳕鱼': '新鲜的鳕鱼片，洁白的鱼肉，放在白色盘子中，健康食品，美食摄影，高清',
+  '豆腐': '新鲜的豆腐块，嫩白色的豆腐，放在木质案板上，健康食材，美食摄影，高清',
+  '鸡蛋': '水煮蛋，切开的水煮蛋，金黄色的蛋黄，健康早餐，放在白色盘子中，美食摄影，高清',
+  '虾仁': '新鲜的虾仁，粉白色的虾肉，放在白色盘子中，健康食材，美食摄影，高清',
+  '瘦牛肉': '新鲜的瘦牛肉片，红色的肉质，放在木质案板上，健康食材，美食摄影，高清',
+  '牛奶': '一杯牛奶，白色的牛奶，放在木质桌面上，健康饮品，美食摄影，高清',
+  '黄豆': '黄豆，健康的豆类，放在碗中，健康食材，美食摄影，高清',
+  '黑豆': '黑豆，健康的豆类，放在碗中，健康食材，美食摄影，高清',
+  '西兰花': '新鲜的西兰花，翠绿色的花椰菜，放在木质案板上，健康蔬菜，美食摄影，高清',
+  '菠菜': '新鲜的菠菜，深绿色的叶子，放在木质案板上，健康蔬菜，美食摄影，高清',
+  '芹菜': '新鲜的芹菜，翠绿色的芹菜茎，放在木质案板上，健康蔬菜，美食摄影，高清',
+  '苦瓜': '新鲜的苦瓜，绿色的外皮，切成片，放在木质案板上，健康蔬菜，美食摄影，高清',
+  '冬瓜': '新鲜的冬瓜，浅绿色的外皮，白色的果肉，放在木质案板上，健康蔬菜，美食摄影，高清',
+  '番茄': '新鲜的番茄，红色的西红柿，放在木质桌面上，健康蔬菜，美食摄影，高清',
+  '黄瓜': '新鲜的黄瓜，绿色的外皮，放在木质案板上，健康蔬菜，美食摄影，高清',
+  '木耳': '干木耳，黑色的木耳，泡发后的木耳，健康食材，美食摄影，高清',
+  '香菇': '新鲜的香菇，棕色的蘑菇，放在木质案板上，健康食材，美食摄影，高清',
+  '海带': '干海带，深褐色的海带，健康食材，美食摄影，高清',
+  '紫菜': '干紫菜，紫色的海苔，健康食材，美食摄影，高清',
+  '洋葱': '新鲜的洋葱，紫色的洋葱，放在木质案板上，健康蔬菜，美食摄影，高清',
+  '草莓': '新鲜的草莓，红色的浆果，放在白色碗中，健康水果，美食摄影，高清',
+  '蓝莓': '新鲜的蓝莓，深蓝色的浆果，放在白色碗中，健康水果，美食摄影，高清',
+  '柚子': '新鲜的柚子，切开的柚子，黄色的外皮，红色的果肉，健康水果，美食摄影，高清',
+  '苹果': '新鲜的苹果，红色的苹果，放在木质桌面上，健康水果，美食摄影，高清',
+  '梨': '新鲜的梨，黄色的梨子，放在木质桌面上，健康水果，美食摄影，高清',
+  '猕猴桃': '新鲜的猕猴桃，切开的猕猴桃，绿色的果肉，黑色的籽，健康水果，美食摄影，高清',
+  '圣女果': '新鲜的圣女果，红色的小番茄，放在白色碗中，健康水果，美食摄影，高清',
+  '樱桃': '新鲜的樱桃，红色的车厘子，放在白色碗中，健康水果，美食摄影，高清',
+  '坚果': '混合坚果，杏仁、核桃、腰果，放在白色碗中，健康零食，美食摄影，高清',
+  '橄榄油': '一瓶橄榄油，透明的玻璃瓶，金黄色的油，健康食用油，美食摄影，高清',
+  '醋': '一瓶醋，透明的玻璃瓶，健康调味品，放在木质桌面上，美食摄影，高清',
+  '肉桂': '肉桂棒，棕色的香料，放在木质桌面上，健康香料，美食摄影，高清',
 };
-
-const FALLBACK_IMAGES = [
-  getPicsumUrl('food1'),
-  getPicsumUrl('food2'),
-  getPicsumUrl('food3'),
-  getPicsumUrl('food4'),
-  getPicsumUrl('food5'),
-  getPicsumUrl('food6'),
-  getPicsumUrl('food7'),
-  getPicsumUrl('food8'),
-  getPicsumUrl('food9'),
-  getPicsumUrl('food10'),
-];
 
 const imageCache: Record<string, string> = {};
 
-function hashCode(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return hash;
+function getTextToImageUrl(prompt: string, imageSize: string = 'landscape_4_3'): string {
+  const encodedPrompt = encodeURIComponent(prompt);
+  return `https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=${encodedPrompt}&image_size=${imageSize}`;
 }
 
 export function getRecipeImage(recipeId: string, recipeName: string): string {
-  // 使用菜品名称作为缓存键，确保相同菜品始终显示相同图片
   const cacheKey = `recipe-${recipeName}`;
   if (imageCache[cacheKey]) {
     return imageCache[cacheKey];
   }
 
-  // 使用特定的图片关键词，如果没有则使用菜品名
-  const imageKeyword = DISH_IMAGE_KEYWORDS[recipeName] || recipeName;
-  
-  // 生成图片URL - 使用关键词确保同类菜品有相似风格的图片
-  const imageUrl = getPicsumUrl(imageKeyword);
+  const prompt = DISH_IMAGE_PROMPTS[recipeName] || `${recipeName}，中国家常菜，美食摄影，高清，食欲感`;
+  const imageUrl = getTextToImageUrl(prompt, 'landscape_4_3');
 
   imageCache[cacheKey] = imageUrl;
   return imageUrl;
 }
 
 export function getFoodImage(foodId: string, foodName: string): string {
-  const cacheKey = `food-${foodId}-${foodName}`;
+  const cacheKey = `food-${foodName}`;
   if (imageCache[cacheKey]) {
     return imageCache[cacheKey];
   }
 
-  const images = FOOD_IMAGES[foodName];
-  let imageUrl: string;
-
-  if (images && images.length > 0) {
-    const index = Math.abs(hashCode(foodId)) % images.length;
-    imageUrl = images[index];
-  } else {
-    const index = Math.abs(hashCode(foodId)) % FALLBACK_IMAGES.length;
-    imageUrl = FALLBACK_IMAGES[index];
-  }
+  const prompt = HEALTHY_FOOD_PROMPTS[foodName] || `${foodName}，健康食材，美食摄影，高清`;
+  const imageUrl = getTextToImageUrl(prompt, 'square_hd');
 
   imageCache[cacheKey] = imageUrl;
   return imageUrl;

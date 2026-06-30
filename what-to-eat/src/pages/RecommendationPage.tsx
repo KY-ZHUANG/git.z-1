@@ -7,6 +7,7 @@ import { RecommendationDisplay, InitialState, LoadingState } from '../components
 import { formatDate } from '../utils/format';
 import { loadRecipes, saveRecommendation, getRecommendationHistory, deleteRecommendation } from '../utils/storage';
 import { LOADING_MESSAGES } from '../utils/constants';
+import { getRecipeImage } from '../utils/image';
 
 // 食材同义词映射表
 const INGREDIENT_SYNONYMS: Record<string, string[]> = {
@@ -848,7 +849,7 @@ const RecommendationPage: React.FC = () => {
                         <div className="flex gap-4 p-4">
                           <div className="relative w-28 h-28 flex-shrink-0 rounded-2xl overflow-hidden">
                             <img
-                              src={recipe.image}
+                              src={getRecipeImage(recipe.id, recipe.name)}
                               alt={recipe.name}
                               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                             />

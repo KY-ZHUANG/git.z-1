@@ -5,6 +5,7 @@ import { DifficultyBadge } from '../common/Badges';
 import { BackIcon, HeartIcon, ShareIcon, ClockIcon, FireIcon } from '../common/Icons';
 import { formatTime } from '../../utils/format';
 import { loadRecipes, isFavorite, toggleFavorite, addToRecentBrowse, getRecentBrowse } from '../../utils/storage';
+import { getRecipeImage } from '../../utils/image';
 
 export const RecipeDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -81,7 +82,7 @@ export const RecipeDetail: React.FC = () => {
     <div className="min-h-screen bg-background pb-20">
       <div className="relative">
         <img
-          src={recipe.image}
+          src={getRecipeImage(recipe.id, recipe.name)}
           alt={recipe.name}
           className="w-full h-64 object-cover"
         />
@@ -205,7 +206,7 @@ export const RecipeDetail: React.FC = () => {
                     className="flex-shrink-0 w-24"
                   >
                     <img
-                      src={r.image}
+                      src={getRecipeImage(r.id, r.name)}
                       alt={r.name}
                       className="w-24 h-24 rounded-lg object-cover"
                     />
